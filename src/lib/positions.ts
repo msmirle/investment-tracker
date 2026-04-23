@@ -1,8 +1,25 @@
 // Portfolio/position aggregation from transactions.
 // Uses weighted average cost accounting.
 
-import type { AssetType } from "./prices";
+import type { AssetType, SymbolOverride } from "./prices";
 import { getQuotes, getFxRate, getHistory } from "./prices";
+import { prisma } from "./prisma";
+
+async function loadSymbolOverrides(symbols: string[]): Promise<Record<string, SymbolOverride>> {
+  if (symbols.length === 0) return {};
+  const rows = await prisma.symbolMeta.findMany({
+    where: { symbol: { in: Array.from(new Set(symbols.map((s) => s.toUpperCase()))) } },
+  });
+  const out: Record<string, SymbolOverride> = {};
+  for (const r of rows) {
+    out[r.symbol.toUpperCase()] = {
+      quoteSymbol: r.quoteSymbol,
+      manualPrice: r.manualPrice,
+      manualPriceCurrency: r.manualPriceCurrency,
+    };
+  }
+  return out;
+}
 
 export interface TransactionRow {
   id: string;
@@ -121,8 +138,13 @@ export async function evaluatePositions(
   positions: Position[],
   displayCurrency: string,
 ): Promise<EvaluatedPosition[]> {
+  const overrides = await loadSymbolOverrides(positions.map((p) => p.symbol));
   const quotes = await getQuotes(
-    positions.map((p) => ({ symbol: p.symbol, assetType: p.assetType })),
+    positions.map((p) => ({
+      symbol: p.symbol,
+      assetType: p.assetType,
+      override: overrides[p.symbol.toUpperCase()],
+    })),
   );
 
   // FX rates
@@ -205,10 +227,16 @@ export async function portfolioHistory(
   days: number,
 ): Promise<PortfolioHistoryPoint[]> {
   if (positions.length === 0) return [];
+  const overrides = await loadSymbolOverrides(positions.map((p) => p.symbol));
   const series = await Promise.all(
     positions.map(async (p) => {
       try {
-        const hist = await getHistory(p.symbol, p.assetType, days);
+        const hist = await getHistory(
+          p.symbol,
+          p.assetType,
+          days,
+          overrides[p.symbol.toUpperCase()],
+        );
         return { position: p, hist };
       } catch {
         return { position: p, hist: [] as Array<{ date: string; close: number }> };

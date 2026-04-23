@@ -8,6 +8,7 @@ import { AllocationChart } from "@/components/AllocationChart";
 import { PerformanceChart } from "@/components/PerformanceChart";
 import { CsvImport } from "@/components/CsvImport";
 import { EditTransactionModal } from "@/components/EditTransactionModal";
+import { PriceOverridesPanel } from "@/components/PriceOverridesPanel";
 import type { PortfolioResponse } from "@/lib/types";
 import type { Transaction } from "@/lib/transaction-types";
 
@@ -116,6 +117,11 @@ export default function HomePage() {
         </div>
         <PositionsTable positions={positions} currency={currency} />
       </section>
+
+      <PriceOverridesPanel
+        symbols={positions.map((p) => p.symbol)}
+        onChanged={refresh}
+      />
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">

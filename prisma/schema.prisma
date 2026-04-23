@@ -41,3 +41,19 @@ model Transaction {
 
   @@index([symbol, executedAt])
 }
+
+// Per-symbol overrides for quote sourcing.
+// - quoteSymbol: optional alias used when fetching live prices (e.g. Yahoo
+//   Morningstar Performance ID "0P000074ST.TO" for a fund whose FundServ
+//   code isn't indexed).
+// - manualPrice: optional last-known NAV to use when no upstream quote
+//   exists at all. Takes precedence over quoteSymbol when set.
+model SymbolMeta {
+  symbol              String   @id
+  quoteSymbol         String?
+  manualPrice         Float?
+  manualPriceCurrency String?
+  manualPriceAsOf     DateTime?
+  notes               String?
+  updatedAt           DateTime @updatedAt
+}

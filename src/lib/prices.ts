@@ -116,10 +116,30 @@ async function resolveCoinId(symbol: string): Promise<string> {
 }
 
 // --- Quote fetching -----------------------------------------------------
-export async function getQuote(symbol: string, assetType: AssetType): Promise<Quote> {
+export interface SymbolOverride {
+  quoteSymbol?: string | null;
+  manualPrice?: number | null;
+  manualPriceCurrency?: string | null;
+}
+
+export async function getQuote(
+  symbol: string,
+  assetType: AssetType,
+  override?: SymbolOverride,
+): Promise<Quote> {
+  // Manual price takes top priority — no network call.
+  if (override?.manualPrice != null && isFinite(override.manualPrice)) {
+    return {
+      symbol: symbol.toUpperCase(),
+      price: override.manualPrice,
+      currency: (override.manualPriceCurrency ?? "USD").toUpperCase(),
+    };
+  }
+  const fetchSymbol = (override?.quoteSymbol && override.quoteSymbol.trim()) || symbol;
+
   if (assetType === "CRYPTO") {
-    return cached(`quote:crypto:${symbol.toUpperCase()}`, 60_000, async () => {
-      const id = await resolveCoinId(symbol);
+    return cached(`quote:crypto:${fetchSymbol.toUpperCase()}`, 60_000, async () => {
+      const id = await resolveCoinId(fetchSymbol);
       const res = await fetch(
         `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`,
         { headers: { accept: "application/json" } },
@@ -127,17 +147,17 @@ export async function getQuote(symbol: string, assetType: AssetType): Promise<Qu
       if (!res.ok) throw new Error(`CoinGecko price failed: ${res.status}`);
       const data = (await res.json()) as Record<string, { usd: number }>;
       const price = data[id]?.usd;
-      if (typeof price !== "number") throw new Error(`No price for ${symbol}`);
+      if (typeof price !== "number") throw new Error(`No price for ${fetchSymbol}`);
       return { symbol: symbol.toUpperCase(), price, currency: "USD", name: id };
     });
   }
-  return cached(`quote:eq:${symbol.toUpperCase()}`, 60_000, async () => {
-    const data = await yahooChart(symbol, { range: "1d", interval: "1d" });
+  return cached(`quote:eq:${fetchSymbol.toUpperCase()}`, 60_000, async () => {
+    const data = await yahooChart(fetchSymbol, { range: "1d", interval: "1d" });
     const meta = data.chart?.result?.[0]?.meta;
     const price = meta?.regularMarketPrice ?? meta?.chartPreviousClose;
-    if (typeof price !== "number") throw new Error(`No price for ${symbol}`);
+    if (typeof price !== "number") throw new Error(`No price for ${fetchSymbol}`);
     return {
-      symbol: (meta?.symbol ?? symbol).toUpperCase(),
+      symbol: symbol.toUpperCase(),
       price,
       currency: (meta?.currency ?? "USD").toUpperCase(),
       name: meta?.shortName ?? meta?.longName ?? undefined,
@@ -146,13 +166,13 @@ export async function getQuote(symbol: string, assetType: AssetType): Promise<Qu
 }
 
 export async function getQuotes(
-  items: Array<{ symbol: string; assetType: AssetType }>,
+  items: Array<{ symbol: string; assetType: AssetType; override?: SymbolOverride }>,
 ): Promise<Record<string, Quote>> {
-  const unique = new Map<string, { symbol: string; assetType: AssetType }>();
+  const unique = new Map<string, { symbol: string; assetType: AssetType; override?: SymbolOverride }>();
   for (const it of items) unique.set(`${it.assetType}:${it.symbol.toUpperCase()}`, it);
   const results = await Promise.allSettled(
     Array.from(unique.values()).map(
-      async (it) => [it, await getQuote(it.symbol, it.assetType)] as const,
+      async (it) => [it, await getQuote(it.symbol, it.assetType, it.override)] as const,
     ),
   );
   const out: Record<string, Quote> = {};
@@ -201,11 +221,15 @@ export async function getHistory(
   symbol: string,
   assetType: AssetType,
   days: number,
+  override?: SymbolOverride,
 ): Promise<HistoryPoint[]> {
-  const key = `hist:${assetType}:${symbol.toUpperCase()}:${days}`;
+  // Manual-priced symbols have no history series; skip network.
+  if (override?.manualPrice != null) return [];
+  const fetchSymbol = (override?.quoteSymbol && override.quoteSymbol.trim()) || symbol;
+  const key = `hist:${assetType}:${fetchSymbol.toUpperCase()}:${days}`;
   return cached(key, 6 * 60 * 60_000, async () => {
     if (assetType === "CRYPTO") {
-      const id = await resolveCoinId(symbol);
+      const id = await resolveCoinId(fetchSymbol);
       const res = await fetch(
         `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=${days}&interval=daily`,
         { headers: { accept: "application/json" } },
@@ -219,7 +243,7 @@ export async function getHistory(
     }
     const end = Math.floor(Date.now() / 1000);
     const start = end - days * 24 * 60 * 60;
-    const data = await yahooChart(symbol, { period1: start, period2: end, interval: "1d" });
+    const data = await yahooChart(fetchSymbol, { period1: start, period2: end, interval: "1d" });
     const result = data.chart?.result?.[0];
     const timestamps = result?.timestamp ?? [];
     const closes = result?.indicators?.quote?.[0]?.close ?? [];
