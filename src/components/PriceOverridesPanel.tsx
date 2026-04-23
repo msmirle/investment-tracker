@@ -105,9 +105,11 @@ export function PriceOverridesPanel({ symbols, onChanged }: Props) {
       {open && (
         <div className="card space-y-4">
           <p className="text-xs text-muted">
-            Use a <b>Yahoo alias</b> (e.g. <code>0P000074ST.TO</code>) for funds that live on
-            Yahoo under a different ticker, or set a <b>manual price</b> for funds with no public
-            quote. Manual price takes precedence over the alias.
+            Canadian mutual fund codes (e.g. <code>TDB310</code>, <code>MFC307</code>) are
+            looked up automatically via Fundata / Globe &amp; Mail. Use this panel only when
+            that fails: set a <b>Yahoo alias</b> (e.g. <code>0P000074ST.TO</code>) to fetch
+            from Yahoo instead, or a <b>manual price</b> for delisted/closed funds. Manual
+            price always wins.
           </p>
           <form onSubmit={save} className="grid grid-cols-1 md:grid-cols-6 gap-2 text-sm">
             <input

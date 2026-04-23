@@ -72,6 +72,34 @@ async function yahooChart(
   return data;
 }
 
+// --- Fundata (Globe & Mail) provider for Canadian mutual funds ---------
+// FundServ codes (e.g. AGF945, TDB310) aren't on Yahoo, but the public
+// Fundata-backed Globe & Mail fund pages embed the latest NAV in a JSON
+// blob inside the HTML. We scrape it as a best-effort fallback.
+function looksLikeFundServ(symbol: string): boolean {
+  // 2-4 letters followed by digits, no dot. e.g. AGF945, TDB310, MFC1824
+  return /^[A-Z]{2,4}\d+$/.test(symbol.toUpperCase());
+}
+
+async function fundataQuote(symbol: string): Promise<Quote> {
+  const upper = symbol.toUpperCase();
+  const url = `https://www.theglobeandmail.com/investing/markets/funds/${encodeURIComponent(upper)}.CF/`;
+  const res = await fetch(url, { headers: YAHOO_HEADERS });
+  if (!res.ok) throw new Error(`Fundata HTTP ${res.status} for ${upper}`);
+  const html = await res.text();
+  const priceMatch = html.match(/"lastPrice":"([\d.]+)"/);
+  if (!priceMatch) throw new Error(`No price in Fundata page for ${upper}`);
+  const price = Number(priceMatch[1]);
+  if (!isFinite(price)) throw new Error(`Bad price '${priceMatch[1]}' for ${upper}`);
+  const nameMatch = html.match(/"symbolName":"([^"]+)"/);
+  return {
+    symbol: upper,
+    price,
+    currency: "CAD", // CADFUNDS exchange is always CAD
+    name: nameMatch ? nameMatch[1] : undefined,
+  };
+}
+
 // --- CoinGecko symbol → id resolution ----------------------------------
 const STATIC_CG_MAP: Record<string, string> = {
   BTC: "bitcoin",
@@ -152,6 +180,17 @@ export async function getQuote(
     });
   }
   return cached(`quote:eq:${fetchSymbol.toUpperCase()}`, 60_000, async () => {
+    // For FundServ-style codes with no Yahoo alias override, go straight
+    // to Fundata — Yahoo never has them and would just 404.
+    const isFundServ = !override?.quoteSymbol && looksLikeFundServ(fetchSymbol);
+    if (isFundServ) {
+      try {
+        return await fundataQuote(fetchSymbol);
+      } catch (err) {
+        // fall through to Yahoo, which will likely also fail with a clearer error
+        console.warn(`[prices] Fundata failed for ${fetchSymbol}:`, err);
+      }
+    }
     const data = await yahooChart(fetchSymbol, { range: "1d", interval: "1d" });
     const meta = data.chart?.result?.[0]?.meta;
     const price = meta?.regularMarketPrice ?? meta?.chartPreviousClose;
