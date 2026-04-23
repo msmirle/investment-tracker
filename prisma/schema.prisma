@@ -1,0 +1,43 @@
+// Prisma schema — SQLite for zero-config local persistence.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Holding {
+  id           String    @id @default(cuid())
+  symbol       String
+  name         String?
+  assetType    String    // STOCK | ETF | CRYPTO
+  quantity     Float
+  costBasis    Float
+  currency     String    @default("USD")
+  purchaseDate DateTime?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Transaction {
+  id         String   @id @default(cuid())
+  symbol     String
+  name       String?
+  assetType  String   // STOCK | ETF | CRYPTO
+  action     String   // BUY | SELL
+  quantity   Float
+  price      Float    // price per unit at execution (in `currency`)
+  fees       Float    @default(0)
+  currency   String   @default("USD")
+  account    String?
+  orderType  String?  // MARKET | LIMIT | ...
+  executedAt DateTime
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([symbol, executedAt])
+}

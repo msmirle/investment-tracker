@@ -1,0 +1,6 @@
+symbol,assetType,quantity,costBasis,currency,name,purchaseDate,notes
+AAPL,STOCK,10,1500,USD,Apple Inc.,2023-05-10,
+MSFT,STOCK,5,1200,USD,Microsoft,2023-01-15,
+VTI,ETF,25,4500,USD,Vanguard Total Market,2022-09-01,
+BTC,CRYPTO,0.15,6000,USD,Bitcoin,2021-11-20,
+ETH,CRYPTO,2,4000,USD,Ethereum,2022-06-01,
