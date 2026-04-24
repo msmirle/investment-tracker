@@ -7,6 +7,7 @@ import { SummaryCards } from "@/components/SummaryCards";
 import { AllocationChart } from "@/components/AllocationChart";
 import { PerformanceChart } from "@/components/PerformanceChart";
 import { StatementImport } from "@/components/StatementImport";
+import { AdvisorButton } from "@/components/AdvisorButton";
 import { EditTransactionModal } from "@/components/EditTransactionModal";
 import { PriceOverridesPanel } from "@/components/PriceOverridesPanel";
 import type { PortfolioResponse } from "@/lib/types";
@@ -171,6 +172,7 @@ export default function HomePage() {
             {loading ? "Refreshing…" : lastUpdated ? `Refresh · ${formatAgo(lastUpdated)}` : "Refresh"}
           </button>
           <StatementImport onImported={refresh} />
+          <AdvisorButton currency={currency} />
         </div>
       </header>
 
