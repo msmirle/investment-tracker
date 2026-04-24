@@ -97,6 +97,31 @@ export function PositionsTable({ positions, currency, selectedId, onSelect }: Pr
               );
             })}
           </tbody>
+          <tfoot className="bg-panel2/60 border-t-2 border-border text-sm font-semibold">
+            {(() => {
+              const mv = positions.reduce((s, h) => s + (h.marketValue ?? 0), 0);
+              const book = positions.reduce((s, h) => s + (h.bookValue ?? 0), 0);
+              const gain = mv - book;
+              const gainPct = book > 0 ? gain / book : null;
+              const realized = positions.reduce((s, h) => s + (h.realizedGain ?? 0), 0);
+              const gainTone = gain >= 0 ? "text-good" : "text-bad";
+              const realizedTone = realized >= 0 ? "text-good" : "text-bad";
+              return (
+                <tr>
+                  <td className="px-5 py-3" colSpan={7}>Total ({positions.length} {positions.length === 1 ? "position" : "positions"})</td>
+                  <td className="px-4 py-3 text-right tabular-nums">{fmtCurrency(mv, currency)}</td>
+                  <td className="px-4 py-3 text-right tabular-nums text-muted">{fmtCurrency(book, currency)}</td>
+                  <td className={`px-4 py-3 text-right tabular-nums ${gainTone}`}>
+                    <div>{fmtCurrency(gain, currency)}</div>
+                    <div className="text-xs font-normal">{fmtPct(gainPct)}</div>
+                  </td>
+                  <td className={`px-4 py-3 text-right tabular-nums ${realizedTone}`}>
+                    {fmtCurrency(realized, currency)}
+                  </td>
+                </tr>
+              );
+            })()}
+          </tfoot>
         </table>
       </div>
     </div>

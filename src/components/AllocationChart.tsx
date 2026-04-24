@@ -1,4 +1,5 @@
 "use client";
+import { useMemo, useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import type { EvaluatedHolding } from "@/lib/types";
 import { fmtCurrency } from "@/lib/format";
@@ -8,17 +9,59 @@ const PALETTE = [
   "#ec4899", "#14b8a6", "#eab308", "#3b82f6", "#84cc16", "#f97316",
 ];
 
+type GroupBy = "symbol" | "type" | "firm";
+
+const GROUPS: Array<{ key: GroupBy; label: string }> = [
+  { key: "symbol", label: "Symbol" },
+  { key: "type", label: "Type" },
+  { key: "firm", label: "Firm" },
+];
+
+function typeLabel(t: EvaluatedHolding["assetType"]): string {
+  return t === "MUTUAL_FUND" ? "MF" : t;
+}
+
 export function AllocationChart({ holdings, currency }: { holdings: EvaluatedHolding[]; currency: string }) {
-  const data = holdings
-    .filter((h) => (h.marketValue ?? 0) > 0)
-    .map((h) => ({ name: h.symbol, value: h.marketValue as number }))
-    .sort((a, b) => b.value - a.value);
+  const [groupBy, setGroupBy] = useState<GroupBy>("symbol");
+
+  const data = useMemo(() => {
+    const totals = new Map<string, number>();
+    for (const h of holdings) {
+      const mv = h.marketValue ?? 0;
+      if (mv <= 0) continue;
+      const key =
+        groupBy === "symbol"
+          ? h.symbol
+          : groupBy === "type"
+          ? typeLabel(h.assetType)
+          : h.firm || "Unassigned";
+      totals.set(key, (totals.get(key) ?? 0) + mv);
+    }
+    return Array.from(totals.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [holdings, groupBy]);
 
   return (
     <div className="card h-[380px] flex flex-col">
-      <div className="flex items-baseline justify-between mb-2">
+      <div className="flex items-center justify-between mb-2 gap-3">
         <h3 className="text-base font-semibold">Allocation</h3>
-        <span className="text-xs text-muted">By market value</span>
+        <div className="flex gap-1 bg-panel2 p-1 rounded-lg border border-border">
+          {GROUPS.map((g) => (
+            <button
+              key={g.key}
+              type="button"
+              onClick={() => setGroupBy(g.key)}
+              className={`px-2.5 py-1 rounded-md text-xs transition ${
+                groupBy === g.key
+                  ? "bg-accent/20 text-accent"
+                  : "text-muted hover:text-fg"
+              }`}
+            >
+              {g.label}
+            </button>
+          ))}
+        </div>
       </div>
       {data.length === 0 ? (
         <div className="flex-1 flex items-center justify-center text-muted text-sm">No data yet</div>

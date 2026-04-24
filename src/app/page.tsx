@@ -14,6 +14,16 @@ import type { Transaction } from "@/lib/transaction-types";
 
 const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CHF", "CNY", "INR", "BRL", "MXN", "SGD"];
 
+function formatAgo(d: Date): string {
+  const s = Math.max(0, Math.round((Date.now() - d.getTime()) / 1000));
+  if (s < 5) return "just now";
+  if (s < 60) return `${s}s ago`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  return `${h}h ago`;
+}
+
 export default function HomePage() {
   const [currency, setCurrency] = useState("CAD");
   const [selectedFirms, setSelectedFirms] = useState<string[]>([]);
@@ -24,8 +34,22 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [editing, setEditing] = useState<Transaction | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [, setNowTick] = useState(0);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
+
+  // Auto-refresh every 60 seconds (matches server quote TTL).
+  useEffect(() => {
+    const id = setInterval(() => refresh(), 60_000);
+    return () => clearInterval(id);
+  }, [refresh]);
+
+  // Re-render once a second so the "Updated X ago" label stays fresh.
+  useEffect(() => {
+    const id = setInterval(() => setNowTick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,6 +68,7 @@ export default function HomePage() {
         if (!cancelled) {
           setData(portfolio);
           setTransactions(txs);
+          setLastUpdated(new Date());
         }
       })
       .catch((e) => {
@@ -142,8 +167,8 @@ export default function HomePage() {
               ))}
             </select>
           </div>
-          <button className="btn-ghost" onClick={refresh} disabled={loading}>
-            {loading ? "Refreshing…" : "Refresh"}
+          <button className="btn-ghost" onClick={refresh} disabled={loading} title={lastUpdated ? `Last updated ${lastUpdated.toLocaleTimeString()}` : undefined}>
+            {loading ? "Refreshing…" : lastUpdated ? `Refresh · ${formatAgo(lastUpdated)}` : "Refresh"}
           </button>
           <CsvImport onImported={refresh} />
         </div>
