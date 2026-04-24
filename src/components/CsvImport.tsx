@@ -40,7 +40,7 @@ export function CsvImport({ onImported }: { onImported: () => void }) {
         className="btn-ghost"
         onClick={() => inputRef.current?.click()}
         disabled={busy}
-        title="CSV columns: symbol, assetType, action, quantity, price, fees, currency, name, executedAt, account, orderType, notes"
+        title="CSV columns: symbol, assetType, action, quantity, price, fees, currency, name, executedAt, account, firm, accountNumber, orderType, notes"
       >
         {busy ? "Importing…" : "Import CSV"}
       </button>

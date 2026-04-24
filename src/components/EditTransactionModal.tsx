@@ -157,6 +157,7 @@ export function EditTransactionModal({ transaction, onClose, onSaved }: Props) {
             >
               <option value="STOCK">Stock</option>
               <option value="ETF">ETF</option>
+              <option value="MUTUAL_FUND">Mutual Fund</option>
               <option value="CRYPTO">Crypto</option>
             </select>
           </div>

@@ -11,6 +11,7 @@ const typeColors: Record<string, string> = {
   STOCK: "bg-indigo-500/20 text-indigo-300",
   ETF: "bg-cyan-500/20 text-cyan-300",
   CRYPTO: "bg-amber-500/20 text-amber-300",
+  MUTUAL_FUND: "bg-emerald-500/20 text-emerald-300",
 };
 
 export function PositionsTable({ positions, currency }: Props) {

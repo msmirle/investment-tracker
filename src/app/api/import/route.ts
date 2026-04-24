@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 // Expected CSV columns (case-insensitive):
-//   symbol, assetType (STOCK|ETF|CRYPTO), action (BUY|SELL), quantity, price,
+//   symbol, assetType (STOCK|ETF|CRYPTO|MUTUAL_FUND), action (BUY|SELL), quantity, price,
 //   fees, currency, name, executedAt, account, orderType, notes
 export async function POST(req: Request) {
   const text = await req.text();
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       const price = parseFloat(r.price || r.fillprice || "0");
       const fees = parseFloat(r.fees || "0");
       if (!symbol) throw new Error("missing symbol");
-      if (!["STOCK", "ETF", "CRYPTO"].includes(assetType)) throw new Error("invalid assetType");
+      if (!["STOCK", "ETF", "CRYPTO", "MUTUAL_FUND"].includes(assetType)) throw new Error("invalid assetType");
       if (!["BUY", "SELL"].includes(action)) throw new Error("invalid action");
       if (!Number.isFinite(quantity) || quantity <= 0) throw new Error("invalid quantity");
       if (!Number.isFinite(price) || price < 0) throw new Error("invalid price");

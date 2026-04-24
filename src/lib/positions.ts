@@ -55,7 +55,7 @@ export interface Position {
 
 function asAssetType(v: string): AssetType {
   const u = v.toUpperCase();
-  if (u === "STOCK" || u === "ETF" || u === "CRYPTO") return u;
+  if (u === "STOCK" || u === "ETF" || u === "CRYPTO" || u === "MUTUAL_FUND") return u;
   return "STOCK";
 }
 

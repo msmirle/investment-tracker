@@ -3,7 +3,7 @@
 // - Crypto: CoinGecko public API.
 // Results are cached in-memory with short TTLs to avoid hammering upstreams.
 
-export type AssetType = "STOCK" | "ETF" | "CRYPTO";
+export type AssetType = "STOCK" | "ETF" | "CRYPTO" | "MUTUAL_FUND";
 
 export interface Quote {
   symbol: string;
