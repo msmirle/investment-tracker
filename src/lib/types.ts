@@ -8,6 +8,9 @@ export interface EvaluatedHolding {
   costCurrency: string;
   currentPrice: number | null;
   priceCurrency: string | null;
+  previousClose?: number | null;
+  dayChange?: number | null;
+  dayChangePct?: number | null;
   marketValue: number | null;
   bookValue: number;
   gain: number | null;

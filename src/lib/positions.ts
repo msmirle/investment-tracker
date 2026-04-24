@@ -137,6 +137,9 @@ export interface EvaluatedPosition {
   costCurrency: string;
   currentPrice: number | null;
   priceCurrency: string | null;
+  previousClose: number | null; // in priceCurrency
+  dayChange: number | null;     // in displayCurrency, across quantity
+  dayChangePct: number | null;  // percent vs previous close
   marketValue: number | null; // in displayCurrency
   bookValue: number;           // in displayCurrency
   gain: number | null;
@@ -194,6 +197,9 @@ export async function evaluatePositions(
         costCurrency: p.currency,
         currentPrice: null,
         priceCurrency: null,
+        previousClose: null,
+        dayChange: null,
+        dayChangePct: null,
         marketValue: null,
         bookValue: isFinite(bookValue) ? bookValue : 0,
         gain: null,
@@ -210,6 +216,11 @@ export async function evaluatePositions(
     const marketValue = p.quantity * q.price * priceFx;
     const gain = marketValue - bookValue;
     const gainPct = bookValue > 0 ? (gain / bookValue) * 100 : null;
+    const prev = typeof q.previousClose === "number" && isFinite(q.previousClose) ? q.previousClose : null;
+    const dayChangeRaw =
+      prev !== null ? p.quantity * (q.price - prev) * priceFx : null;
+    const dayChange = dayChangeRaw !== null && isFinite(dayChangeRaw) ? dayChangeRaw : null;
+    const dayChangePct = prev !== null && prev > 0 ? ((q.price - prev) / prev) * 100 : null;
     return {
       id: p.key,
       symbol: p.symbol,
@@ -220,6 +231,9 @@ export async function evaluatePositions(
       costCurrency: p.currency,
       currentPrice: q.price,
       priceCurrency: q.currency,
+      previousClose: prev,
+      dayChange,
+      dayChangePct,
       marketValue: isFinite(marketValue) ? marketValue : null,
       bookValue: isFinite(bookValue) ? bookValue : 0,
       gain: isFinite(gain) ? gain : null,

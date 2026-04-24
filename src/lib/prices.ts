@@ -10,6 +10,7 @@ export interface Quote {
   price: number;
   currency: string;
   name?: string;
+  previousClose?: number;
 }
 
 // --- Simple TTL cache ---------------------------------------------------
@@ -169,14 +170,19 @@ export async function getQuote(
     return cached(`quote:crypto:${fetchSymbol.toUpperCase()}`, 60_000, async () => {
       const id = await resolveCoinId(fetchSymbol);
       const res = await fetch(
-        `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`,
+        `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd&include_24hr_change=true`,
         { headers: { accept: "application/json" } },
       );
       if (!res.ok) throw new Error(`CoinGecko price failed: ${res.status}`);
-      const data = (await res.json()) as Record<string, { usd: number }>;
+      const data = (await res.json()) as Record<string, { usd: number; usd_24h_change?: number }>;
       const price = data[id]?.usd;
       if (typeof price !== "number") throw new Error(`No price for ${fetchSymbol}`);
-      return { symbol: symbol.toUpperCase(), price, currency: "USD", name: id };
+      const pct = data[id]?.usd_24h_change;
+      const previousClose =
+        typeof pct === "number" && isFinite(pct) && 1 + pct / 100 !== 0
+          ? price / (1 + pct / 100)
+          : undefined;
+      return { symbol: symbol.toUpperCase(), price, currency: "USD", name: id, previousClose };
     });
   }
   return cached(`quote:eq:${fetchSymbol.toUpperCase()}`, 60_000, async () => {
@@ -195,11 +201,16 @@ export async function getQuote(
     const meta = data.chart?.result?.[0]?.meta;
     const price = meta?.regularMarketPrice ?? meta?.chartPreviousClose;
     if (typeof price !== "number") throw new Error(`No price for ${fetchSymbol}`);
+    const previousClose =
+      typeof meta?.chartPreviousClose === "number" && meta.chartPreviousClose !== price
+        ? meta.chartPreviousClose
+        : undefined;
     return {
       symbol: symbol.toUpperCase(),
       price,
       currency: (meta?.currency ?? "USD").toUpperCase(),
       name: meta?.shortName ?? meta?.longName ?? undefined,
+      previousClose,
     };
   });
 }
