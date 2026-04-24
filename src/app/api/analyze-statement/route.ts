@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import OpenAI, { AzureOpenAI } from "openai";
 import { prisma } from "@/lib/prisma";
 import { ensureMigrated } from "@/lib/migrate";
 import { aggregateTransactions, type TransactionRow } from "@/lib/positions";
@@ -10,6 +10,31 @@ export const runtime = "nodejs";
 export const maxDuration = 120;
 
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o";
+
+function getClient(): { client: OpenAI | AzureOpenAI; model: string } | { error: string } {
+  const azEndpoint = process.env.AZURE_OPENAI_ENDPOINT;
+  const azKey = process.env.AZURE_OPENAI_API_KEY;
+  const azDeployment = process.env.AZURE_OPENAI_DEPLOYMENT || MODEL;
+  const azApiVersion = process.env.AZURE_OPENAI_API_VERSION || "2024-10-21";
+  if (azEndpoint && azKey) {
+    return {
+      client: new AzureOpenAI({
+        endpoint: azEndpoint,
+        apiKey: azKey,
+        apiVersion: azApiVersion,
+        deployment: azDeployment,
+      }),
+      model: azDeployment,
+    };
+  }
+  if (process.env.OPENAI_API_KEY) {
+    return { client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }), model: MODEL };
+  }
+  return {
+    error:
+      "No AI credentials configured. Set AZURE_OPENAI_ENDPOINT + AZURE_OPENAI_API_KEY (and optionally AZURE_OPENAI_DEPLOYMENT), or OPENAI_API_KEY.",
+  };
+}
 
 interface ExtractedTx {
   symbol: string;
@@ -69,12 +94,17 @@ const JSON_SCHEMA = {
         additionalProperties: false,
         required: [
           "symbol",
+          "name",
           "assetType",
           "action",
           "quantity",
           "price",
+          "fees",
           "currency",
+          "firm",
+          "accountNumber",
           "executedAt",
+          "notes",
         ],
         properties: {
           symbol: { type: "string" },
@@ -117,12 +147,11 @@ function normalize(tx: ExtractedTx) {
 }
 
 export async function POST(req: Request) {
-  if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json(
-      { error: "OPENAI_API_KEY is not configured on the server." },
-      { status: 500 },
-    );
+  const got = getClient();
+  if ("error" in got) {
+    return NextResponse.json({ error: got.error }, { status: 500 });
   }
+  const { client, model } = got;
   await ensureMigrated();
 
   const form = await req.formData();
@@ -138,12 +167,10 @@ export async function POST(req: Request) {
   const bytes = Buffer.from(await file.arrayBuffer());
   const base64 = bytes.toString("base64");
 
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
   let parsed: ExtractionResult;
   try {
     const resp = await client.responses.create({
-      model: MODEL,
+      model,
       input: [
         {
           role: "system",
