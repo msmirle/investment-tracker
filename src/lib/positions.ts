@@ -95,7 +95,12 @@ export function aggregateTransactions(txs: TransactionRow[]): Position[] {
     const price = Number(tx.price) || 0;
     const fees = Number(tx.fees) || 0;
 
-    if (tx.action.toUpperCase() === "SELL") {
+    const action = tx.action.toUpperCase();
+    if (action === "DIST") {
+      // Distribution / realized proceeds that don't affect quantity or cost basis.
+      // Amount is qty * price (fees subtracted).
+      current.realizedGain += qty * price - fees;
+    } else if (action === "SELL") {
       const avgCost = current.quantity > 0 ? current.costBasis / current.quantity : 0;
       const soldCost = avgCost * qty;
       const proceeds = qty * price - fees;

@@ -9,9 +9,9 @@ export async function GET(req: Request) {
   await ensureMigrated();
   const url = new URL(req.url);
   const display = (url.searchParams.get("currency") || "USD").toUpperCase();
-  const firm = url.searchParams.get("firm");
+  const firms = url.searchParams.getAll("firm").filter(Boolean);
   const txs = await prisma.transaction.findMany({
-    where: firm ? { firm } : undefined,
+    where: firms.length > 0 ? { firm: { in: firms } } : undefined,
   });
   const positions = aggregateTransactions(
     txs.map((t) => ({

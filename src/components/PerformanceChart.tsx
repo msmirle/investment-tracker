@@ -15,7 +15,7 @@ const RANGES: Array<{ label: string; days: number }> = [
   { label: "5Y", days: 1825 },
 ];
 
-export function PerformanceChart({ currency, firm, symbol, accountNumber, refreshKey }: { currency: string; firm?: string; symbol?: string; accountNumber?: string; refreshKey: number }) {
+export function PerformanceChart({ currency, firms, symbol, accountNumber, refreshKey }: { currency: string; firms?: string[]; symbol?: string; accountNumber?: string; refreshKey: number }) {
   const [days, setDays] = useState(180);
   const [data, setData] = useState<HistoryResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,7 +26,7 @@ export function PerformanceChart({ currency, firm, symbol, accountNumber, refres
     setLoading(true);
     setError(null);
     const params = new URLSearchParams({ currency, days: String(days) });
-    if (firm) params.set("firm", firm);
+    if (firms) for (const f of firms) params.append("firm", f);
     if (symbol) params.set("symbol", symbol);
     if (accountNumber) params.set("accountNumber", accountNumber);
     fetch(`/api/history?${params.toString()}`)
@@ -43,7 +43,7 @@ export function PerformanceChart({ currency, firm, symbol, accountNumber, refres
     return () => {
       cancelled = true;
     };
-  }, [currency, days, firm, symbol, accountNumber, refreshKey]);
+  }, [currency, days, firms, symbol, accountNumber, refreshKey]);
 
   const series = data?.series ?? [];
 

@@ -15,8 +15,8 @@ import type { Transaction } from "@/lib/transaction-types";
 const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CHF", "CNY", "INR", "BRL", "MXN", "SGD"];
 
 export default function HomePage() {
-  const [currency, setCurrency] = useState("USD");
-  const [firm, setFirm] = useState<string>("");
+  const [currency, setCurrency] = useState("CAD");
+  const [selectedFirms, setSelectedFirms] = useState<string[]>([]);
   const [selectedPositionId, setSelectedPositionId] = useState<string | null>(null);
   const [data, setData] = useState<PortfolioResponse | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -31,7 +31,7 @@ export default function HomePage() {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    const firmQs = firm ? `&firm=${encodeURIComponent(firm)}` : "";
+    const firmQs = selectedFirms.map((f) => `&firm=${encodeURIComponent(f)}`).join("");
     Promise.all([
       fetch(`/api/portfolio?currency=${currency}${firmQs}`).then((r) =>
         r.ok ? r.json() : Promise.reject(new Error(`portfolio HTTP ${r.status}`)),
@@ -55,7 +55,7 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, [currency, firm, refreshKey]);
+  }, [currency, selectedFirms, refreshKey]);
 
   async function handleDeleteTx(id: string) {
     await fetch(`/api/transactions/${id}`, { method: "DELETE" });
@@ -69,7 +69,7 @@ export default function HomePage() {
   const visiblePositions = selectedPosition ? [selectedPosition] : allPositions;
   const firms = Array.from(new Set(transactions.map((t) => t.firm).filter(Boolean) as string[])).sort();
   const visibleTransactions = transactions.filter((t) => {
-    if (firm && t.firm !== firm) return false;
+    if (selectedFirms.length > 0 && (!t.firm || !selectedFirms.includes(t.firm))) return false;
     if (selectedPosition) {
       if (t.symbol !== selectedPosition.symbol) return false;
       if ((t.firm ?? null) !== (selectedPosition.firm ?? null)) return false;
@@ -77,6 +77,9 @@ export default function HomePage() {
     }
     return true;
   });
+
+  const toggleFirm = (f: string) =>
+    setSelectedFirms((prev) => (prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]));
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -92,21 +95,37 @@ export default function HomePage() {
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <label className="text-xs uppercase tracking-wider text-muted">Firm</label>
-            <select
-              className="select !w-auto"
-              title="Filter by firm"
-              value={firm}
-              onChange={(e) => setFirm(e.target.value)}
+          <div className="flex items-center gap-2 flex-wrap">
+            <label className="text-xs uppercase tracking-wider text-muted">Firms</label>
+            <button
+              type="button"
+              onClick={() => setSelectedFirms([])}
+              className={`px-2.5 py-1 rounded-full text-xs border transition ${
+                selectedFirms.length === 0
+                  ? "bg-accent/20 border-accent/40 text-accent"
+                  : "bg-panel2 border-border text-muted hover:text-fg"
+              }`}
+              title="Show all firms"
             >
-              <option value="">All firms</option>
-              {firms.map((f) => (
-                <option key={f} value={f}>
+              All
+            </button>
+            {firms.map((f) => {
+              const active = selectedFirms.includes(f);
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => toggleFirm(f)}
+                  className={`px-2.5 py-1 rounded-full text-xs border transition ${
+                    active
+                      ? "bg-accent/20 border-accent/40 text-accent"
+                      : "bg-panel2 border-border text-muted hover:text-fg"
+                  }`}
+                >
                   {f}
-                </option>
-              ))}
-            </select>
+                </button>
+              );
+            })}
           </div>
           <div className="flex items-center gap-2">
             <label className="text-xs uppercase tracking-wider text-muted">Display in</label>
@@ -141,7 +160,7 @@ export default function HomePage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PerformanceChart
           currency={currency}
-          firm={firm}
+          firms={selectedFirms}
           symbol={selectedPosition?.symbol}
           accountNumber={selectedPosition?.accountNumber ?? undefined}
           refreshKey={refreshKey}
