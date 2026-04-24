@@ -2,7 +2,7 @@
 // Uses weighted average cost accounting.
 
 import type { AssetType, SymbolOverride } from "./prices";
-import { getQuotes, getFxRate, getHistory } from "./prices";
+import { getQuotes, getQuote, getFxRate, getHistory } from "./prices";
 import { prisma } from "./prisma";
 
 async function loadSymbolOverrides(symbols: string[]): Promise<Record<string, SymbolOverride>> {
@@ -244,17 +244,12 @@ export async function portfolioHistory(
   const overrides = await loadSymbolOverrides(positions.map((p) => p.symbol));
   const series = await Promise.all(
     positions.map(async (p) => {
-      try {
-        const hist = await getHistory(
-          p.symbol,
-          p.assetType,
-          days,
-          overrides[p.symbol.toUpperCase()],
-        );
-        return { position: p, hist };
-      } catch {
-        return { position: p, hist: [] as Array<{ date: string; close: number }> };
-      }
+      const ov = overrides[p.symbol.toUpperCase()];
+      const [hist, currentQuote] = await Promise.all([
+        getHistory(p.symbol, p.assetType, days, ov).catch(() => [] as Array<{ date: string; close: number }>),
+        getQuote(p.symbol, p.assetType, ov).catch(() => null),
+      ]);
+      return { position: p, hist, currentPrice: currentQuote?.price ?? null };
     }),
   );
 
@@ -272,14 +267,29 @@ export async function portfolioHistory(
     }),
   );
 
+  // Union of all dates across all series so positions without history
+  // (e.g. mutual funds, cash, manual-priced) still contribute at their
+  // current price on every date.
+  const allDates = new Set<string>();
+  for (const s of series) for (const pt of s.hist) allDates.add(pt.date);
+  if (allDates.size === 0) {
+    // No historical data at all — emit a single point at today using current quotes.
+    const today = new Date().toISOString().slice(0, 10);
+    allDates.add(today);
+  }
+
   const totalsByDate = new Map<string, number>();
   for (const s of series) {
     const fx = s.position.assetType === "CRYPTO"
       ? fxRates["USD"] ?? 1
       : fxRates[s.position.currency] ?? 1;
-    for (const pt of s.hist) {
-      const v = s.position.quantity * pt.close * fx;
-      totalsByDate.set(pt.date, (totalsByDate.get(pt.date) ?? 0) + v);
+    const priceByDate = new Map<string, number>();
+    for (const pt of s.hist) priceByDate.set(pt.date, pt.close);
+    for (const date of allDates) {
+      const close = priceByDate.get(date) ?? s.currentPrice;
+      if (close == null) continue;
+      const v = s.position.quantity * close * fx;
+      totalsByDate.set(date, (totalsByDate.get(date) ?? 0) + v);
     }
   }
   return Array.from(totalsByDate.entries())

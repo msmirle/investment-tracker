@@ -5,6 +5,8 @@ import type { EvaluatedHolding } from "@/lib/types";
 interface Props {
   positions: EvaluatedHolding[];
   currency: string;
+  selectedId?: string | null;
+  onSelect?: (id: string | null) => void;
 }
 
 const typeColors: Record<string, string> = {
@@ -14,7 +16,7 @@ const typeColors: Record<string, string> = {
   MUTUAL_FUND: "bg-emerald-500/20 text-emerald-300",
 };
 
-export function PositionsTable({ positions, currency }: Props) {
+export function PositionsTable({ positions, currency, selectedId, onSelect }: Props) {
   if (positions.length === 0) {
     return (
       <div className="card text-center py-12">
@@ -49,7 +51,13 @@ export function PositionsTable({ positions, currency }: Props) {
               const avgCost = h.quantity > 0 ? h.costBasis / h.quantity : 0;
               const realizedTone = (h.realizedGain ?? 0) >= 0 ? "text-good" : "text-bad";
               return (
-                <tr key={h.id} className="border-t border-border/60 hover:bg-panel2/40 transition">
+                <tr
+                  key={h.id}
+                  onClick={() => onSelect?.(selectedId === h.id ? null : h.id)}
+                  className={`border-t border-border/60 transition cursor-pointer ${
+                    selectedId === h.id ? "bg-accent/10 hover:bg-accent/20" : "hover:bg-panel2/40"
+                  }`}
+                >
                   <td className="px-5 py-3">
                     <div className="font-semibold">{h.symbol}</div>
                     <div className="text-xs text-muted truncate max-w-[16rem]">{h.name}</div>

@@ -15,7 +15,7 @@ const RANGES: Array<{ label: string; days: number }> = [
   { label: "5Y", days: 1825 },
 ];
 
-export function PerformanceChart({ currency, refreshKey }: { currency: string; refreshKey: number }) {
+export function PerformanceChart({ currency, firm, symbol, accountNumber, refreshKey }: { currency: string; firm?: string; symbol?: string; accountNumber?: string; refreshKey: number }) {
   const [days, setDays] = useState(180);
   const [data, setData] = useState<HistoryResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,7 +25,11 @@ export function PerformanceChart({ currency, refreshKey }: { currency: string; r
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetch(`/api/history?currency=${currency}&days=${days}`)
+    const params = new URLSearchParams({ currency, days: String(days) });
+    if (firm) params.set("firm", firm);
+    if (symbol) params.set("symbol", symbol);
+    if (accountNumber) params.set("accountNumber", accountNumber);
+    fetch(`/api/history?${params.toString()}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((d: HistoryResponse) => {
         if (!cancelled) setData(d);
@@ -39,7 +43,7 @@ export function PerformanceChart({ currency, refreshKey }: { currency: string; r
     return () => {
       cancelled = true;
     };
-  }, [currency, days, refreshKey]);
+  }, [currency, days, firm, symbol, accountNumber, refreshKey]);
 
   const series = data?.series ?? [];
 

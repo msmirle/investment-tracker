@@ -10,7 +10,16 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const display = (url.searchParams.get("currency") || "USD").toUpperCase();
   const days = Math.max(7, Math.min(1825, parseInt(url.searchParams.get("days") || "180", 10)));
-  const txs = await prisma.transaction.findMany();
+  const firm = url.searchParams.get("firm");
+  const symbol = url.searchParams.get("symbol");
+  const accountNumber = url.searchParams.get("accountNumber");
+  const where: Record<string, string> = {};
+  if (firm) where.firm = firm;
+  if (symbol) where.symbol = symbol;
+  if (accountNumber) where.accountNumber = accountNumber;
+  const txs = await prisma.transaction.findMany({
+    where: Object.keys(where).length > 0 ? where : undefined,
+  });
   const positions = aggregateTransactions(
     txs.map((t) => ({
       id: t.id,

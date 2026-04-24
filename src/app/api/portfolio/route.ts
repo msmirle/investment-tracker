@@ -9,7 +9,10 @@ export async function GET(req: Request) {
   await ensureMigrated();
   const url = new URL(req.url);
   const display = (url.searchParams.get("currency") || "USD").toUpperCase();
-  const txs = await prisma.transaction.findMany();
+  const firm = url.searchParams.get("firm");
+  const txs = await prisma.transaction.findMany({
+    where: firm ? { firm } : undefined,
+  });
   const positions = aggregateTransactions(
     txs.map((t) => ({
       id: t.id,

@@ -42,12 +42,14 @@ export function AllocationChart({ holdings, currency }: { holdings: EvaluatedHol
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{ background: "#141a2f", border: "1px solid #2a335a", borderRadius: 12 }}
+                contentStyle={{ background: "#141a2f", border: "1px solid #2a335a", borderRadius: 12, color: "#e2e8f0" }}
+                itemStyle={{ color: "#e2e8f0" }}
+                labelStyle={{ color: "#f1f5f9" }}
                 formatter={(v: number) => fmtCurrency(v, currency)}
               />
               <Legend
                 iconType="circle"
-                wrapperStyle={{ fontSize: 12, color: "#94a3b8" }}
+                wrapperStyle={{ fontSize: 12, color: "#e2e8f0" }}
               />
             </PieChart>
           </ResponsiveContainer>
