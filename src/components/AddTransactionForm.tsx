@@ -215,14 +215,14 @@ export function AddTransactionForm({ onAdded }: Props) {
           <label className="label">Firm</label>
           <input
             className="input"
-            placeholder="Questrade, Investia"
+            placeholder="Questrade, Investia - Michael"
             list="firm-suggestions"
             value={form.firm}
             onChange={(e) => setForm({ ...form, firm: e.target.value })}
           />
           <datalist id="firm-suggestions">
             <option value="Questrade" />
-            <option value="Investia" />
+            <option value="Investia - Michael" />
           </datalist>
         </div>
         <div>

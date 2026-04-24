@@ -76,7 +76,7 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
                   </td>
                   <td className="px-4 py-3">
                     <span className={`pill ${typeColors[t.assetType] ?? "bg-slate-500/20 text-slate-300"}`}>
-                      {t.assetType}
+                      {t.assetType === "MUTUAL_FUND" ? "MF" : t.assetType}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums">{fmtNumber(t.quantity, 6)}</td>

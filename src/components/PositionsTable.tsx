@@ -56,7 +56,7 @@ export function PositionsTable({ positions, currency }: Props) {
                   </td>
                   <td className="px-4 py-3">
                     <span className={`pill ${typeColors[h.assetType] ?? "bg-slate-500/20 text-slate-300"}`}>
-                      {h.assetType}
+                      {h.assetType === "MUTUAL_FUND" ? "MF" : h.assetType}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-xs text-muted">{h.firm || "—"}</td>
