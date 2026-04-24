@@ -6,7 +6,7 @@ import { TransactionsTable } from "@/components/TransactionsTable";
 import { SummaryCards } from "@/components/SummaryCards";
 import { AllocationChart } from "@/components/AllocationChart";
 import { PerformanceChart } from "@/components/PerformanceChart";
-import { CsvImport } from "@/components/CsvImport";
+import { StatementImport } from "@/components/StatementImport";
 import { EditTransactionModal } from "@/components/EditTransactionModal";
 import { PriceOverridesPanel } from "@/components/PriceOverridesPanel";
 import type { PortfolioResponse } from "@/lib/types";
@@ -170,7 +170,7 @@ export default function HomePage() {
           <button className="btn-ghost" onClick={refresh} disabled={loading} title={lastUpdated ? `Last updated ${lastUpdated.toLocaleTimeString()}` : undefined}>
             {loading ? "Refreshing…" : lastUpdated ? `Refresh · ${formatAgo(lastUpdated)}` : "Refresh"}
           </button>
-          <CsvImport onImported={refresh} />
+          <StatementImport onImported={refresh} />
         </div>
       </header>
 

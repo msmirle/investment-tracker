@@ -33,7 +33,7 @@ function validate(b: TxBody): string | null {
   if (!b.symbol || typeof b.symbol !== "string") return "symbol is required";
   if (!b.assetType || !["STOCK", "ETF", "CRYPTO", "MUTUAL_FUND"].includes(b.assetType))
     return "assetType must be STOCK|ETF|CRYPTO|MUTUAL_FUND";
-  if (!b.action || !["BUY", "SELL"].includes(b.action)) return "action must be BUY|SELL";
+  if (!b.action || !["BUY", "SELL", "DIST"].includes(b.action)) return "action must be BUY|SELL|DIST";
   if (typeof b.quantity !== "number" || b.quantity <= 0) return "quantity must be > 0";
   if (typeof b.price !== "number" || b.price < 0) return "price must be >= 0";
   if (!b.executedAt) return "executedAt is required";

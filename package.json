@@ -13,14 +13,13 @@
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "next": "^15.0.3",
-    "papaparse": "^5.4.1",
+    "openai": "^6.34.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.13.3"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
-    "@types/papaparse": "^5.3.15",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.20",
