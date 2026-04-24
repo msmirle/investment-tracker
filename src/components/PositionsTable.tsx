@@ -39,7 +39,6 @@ export function PositionsTable({ positions, currency, selectedId, onSelect }: Pr
               <th className="text-right px-4 py-3">Quantity</th>
               <th className="text-right px-4 py-3">Avg Cost</th>
               <th className="text-right px-4 py-3">Price</th>
-              <th className="text-right px-4 py-3">Day</th>
               <th className="text-right px-4 py-3">Market Value</th>
               <th className="text-right px-4 py-3">Book Value</th>
               <th className="text-right px-4 py-3">Unrealized</th>
@@ -74,24 +73,26 @@ export function PositionsTable({ positions, currency, selectedId, onSelect }: Pr
                   <td className="px-4 py-3 text-right tabular-nums text-muted">
                     {fmtCurrency(avgCost, h.costCurrency)}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums">
-                    {h.currentPrice !== null
-                      ? fmtCurrency(h.currentPrice, h.priceCurrency || "USD")
-                      : <span className="text-bad text-xs">{h.error || "—"}</span>}
-                  </td>
                   {(() => {
-                    const dc = h.dayChange ?? null;
                     const dcPct = h.dayChangePct ?? null;
-                    const dayTone = dc === null ? "text-muted" : dc >= 0 ? "text-good" : "text-bad";
+                    const priceTone =
+                      dcPct === null ? "" : dcPct >= 0 ? "text-good" : "text-bad";
+                    const arrow = dcPct === null ? "" : dcPct >= 0 ? "▲" : "▼";
                     return (
-                      <td className={`px-4 py-3 text-right tabular-nums ${dayTone}`}>
-                        {dc === null ? (
-                          <span className="text-xs">—</span>
-                        ) : (
+                      <td className={`px-4 py-3 text-right tabular-nums ${priceTone}`}>
+                        {h.currentPrice !== null ? (
                           <>
-                            <div className="font-medium">{fmtCurrency(dc, currency)}</div>
-                            <div className="text-xs">{fmtPct(dcPct)}</div>
+                            <div className="font-medium">
+                              {fmtCurrency(h.currentPrice, h.priceCurrency || "USD")}
+                            </div>
+                            {dcPct !== null && (
+                              <div className="text-xs">
+                                {arrow} {fmtPct(dcPct)}
+                              </div>
+                            )}
                           </>
+                        ) : (
+                          <span className="text-bad text-xs">{h.error || "—"}</span>
                         )}
                       </td>
                     );
@@ -122,31 +123,11 @@ export function PositionsTable({ positions, currency, selectedId, onSelect }: Pr
               const gain = mv - book;
               const gainPct = book > 0 ? gain / book : null;
               const realized = positions.reduce((s, h) => s + (h.realizedGain ?? 0), 0);
-              const dayTotal = positions.reduce(
-                (s, h) => s + (typeof h.dayChange === "number" ? h.dayChange : 0),
-                0,
-              );
-              const dayBase = positions.reduce((s, h) => {
-                if (
-                  typeof h.dayChange === "number" &&
-                  typeof h.marketValue === "number" &&
-                  h.marketValue !== 0
-                ) {
-                  return s + (h.marketValue - h.dayChange);
-                }
-                return s;
-              }, 0);
-              const dayPct = dayBase > 0 ? dayTotal / dayBase : null;
               const gainTone = gain >= 0 ? "text-good" : "text-bad";
               const realizedTone = realized >= 0 ? "text-good" : "text-bad";
-              const dayTone = dayTotal >= 0 ? "text-good" : "text-bad";
               return (
                 <tr>
                   <td className="px-5 py-3" colSpan={7}>Total ({positions.length} {positions.length === 1 ? "position" : "positions"})</td>
-                  <td className={`px-4 py-3 text-right tabular-nums ${dayTone}`}>
-                    <div>{fmtCurrency(dayTotal, currency)}</div>
-                    <div className="text-xs font-normal">{fmtPct(dayPct !== null ? dayPct * 100 : null)}</div>
-                  </td>
                   <td className="px-4 py-3 text-right tabular-nums">{fmtCurrency(mv, currency)}</td>
                   <td className="px-4 py-3 text-right tabular-nums text-muted">{fmtCurrency(book, currency)}</td>
                   <td className={`px-4 py-3 text-right tabular-nums ${gainTone}`}>
