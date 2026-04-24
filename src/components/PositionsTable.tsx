@@ -66,7 +66,9 @@ export function PositionsTable({ positions, currency }: Props) {
                       : <span className="text-bad text-xs">{h.error || "—"}</span>}
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums font-medium">
-                    {fmtCurrency(h.marketValue, currency)}
+                    {h.currentPrice !== null
+                      ? fmtCurrency(h.quantity * h.currentPrice, h.priceCurrency || currency)
+                      : fmtCurrency(h.marketValue, currency)}
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums text-muted">
                     {fmtCurrency(h.costBasis, h.costCurrency)}
