@@ -22,6 +22,8 @@ export function AddTransactionForm({ onAdded }: Props) {
     fees: "",
     currency: "USD",
     account: "",
+    firm: "",
+    accountNumber: "",
     orderType: "MARKET",
     executedAt: "",
     notes: "",
@@ -46,6 +48,8 @@ export function AddTransactionForm({ onAdded }: Props) {
           fees: form.fees ? parseFloat(form.fees) : 0,
           currency: form.currency,
           account: form.account || null,
+          firm: form.firm || null,
+          accountNumber: form.accountNumber || null,
           orderType: form.orderType || null,
           executedAt: new Date(form.executedAt).toISOString(),
           notes: form.notes || null,
@@ -204,6 +208,29 @@ export function AddTransactionForm({ onAdded }: Props) {
             value={form.executedAt}
             onChange={(e) => setForm({ ...form, executedAt: e.target.value })}
             required
+          />
+        </div>
+        <div>
+          <label className="label">Firm</label>
+          <input
+            className="input"
+            placeholder="Questrade, Investia"
+            list="firm-suggestions"
+            value={form.firm}
+            onChange={(e) => setForm({ ...form, firm: e.target.value })}
+          />
+          <datalist id="firm-suggestions">
+            <option value="Questrade" />
+            <option value="Investia" />
+          </datalist>
+        </div>
+        <div>
+          <label className="label">Account #</label>
+          <input
+            className="input"
+            placeholder="52033641"
+            value={form.accountNumber}
+            onChange={(e) => setForm({ ...form, accountNumber: e.target.value })}
           />
         </div>
         <div>

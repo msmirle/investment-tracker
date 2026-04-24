@@ -32,19 +32,23 @@ export interface TransactionRow {
   fees: number;
   currency: string;
   account?: string | null;
+  firm?: string | null;
+  accountNumber?: string | null;
   orderType?: string | null;
   executedAt: Date | string;
   notes?: string | null;
 }
 
 export interface Position {
-  key: string; // symbol|assetType|currency
+  key: string; // symbol|assetType|currency|firm|accountNumber
   symbol: string;
   name: string | null;
   assetType: AssetType;
   quantity: number;
   costBasis: number; // total in `currency`
   currency: string;
+  firm: string | null;
+  accountNumber: string | null;
   realizedGain: number; // in `currency`
   txCount: number;
 }
@@ -70,7 +74,9 @@ export function aggregateTransactions(txs: TransactionRow[]): Position[] {
     const assetType = asAssetType(tx.assetType);
     const currency = tx.currency.toUpperCase();
     const symbol = tx.symbol.toUpperCase();
-    const key = `${symbol}|${assetType}|${currency}`;
+    const firm = tx.firm?.trim() || null;
+    const accountNumber = tx.accountNumber?.trim() || null;
+    const key = `${symbol}|${assetType}|${currency}|${firm ?? ""}|${accountNumber ?? ""}`;
     const current: Position = map.get(key) ?? {
       key,
       symbol,
@@ -79,6 +85,8 @@ export function aggregateTransactions(txs: TransactionRow[]): Position[] {
       quantity: 0,
       costBasis: 0,
       currency,
+      firm,
+      accountNumber,
       realizedGain: 0,
       txCount: 0,
     };
@@ -130,6 +138,8 @@ export interface EvaluatedPosition {
   gainPct: number | null;
   realizedGain: number;        // in displayCurrency
   displayCurrency: string;
+  firm: string | null;
+  accountNumber: string | null;
   txCount: number;
   error?: string;
 }
@@ -185,6 +195,8 @@ export async function evaluatePositions(
         gainPct: null,
         realizedGain: isFinite(realizedGain) ? realizedGain : 0,
         displayCurrency,
+        firm: p.firm,
+        accountNumber: p.accountNumber,
         txCount: p.txCount,
         error: "No price available",
       };
@@ -209,6 +221,8 @@ export async function evaluatePositions(
       gainPct,
       realizedGain: isFinite(realizedGain) ? realizedGain : 0,
       displayCurrency,
+      firm: p.firm,
+      accountNumber: p.accountNumber,
       txCount: p.txCount,
     };
   });

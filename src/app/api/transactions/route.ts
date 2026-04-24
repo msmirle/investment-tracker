@@ -22,6 +22,8 @@ interface TxBody {
   fees?: number;
   currency?: string;
   account?: string | null;
+  firm?: string | null;
+  accountNumber?: string | null;
   orderType?: string | null;
   executedAt?: string;
   notes?: string | null;
@@ -55,6 +57,8 @@ export async function POST(req: Request) {
       fees: body.fees ?? 0,
       currency: (body.currency || "USD").toUpperCase(),
       account: body.account?.trim() || null,
+      firm: body.firm?.trim() || null,
+      accountNumber: body.accountNumber?.trim() || null,
       orderType: body.orderType?.trim() || null,
       executedAt: new Date(body.executedAt!),
       notes: body.notes?.trim() || null,

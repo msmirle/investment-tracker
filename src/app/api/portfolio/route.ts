@@ -22,6 +22,8 @@ export async function GET(req: Request) {
       fees: t.fees,
       currency: t.currency,
       account: t.account,
+      firm: t.firm,
+      accountNumber: t.accountNumber,
       orderType: t.orderType,
       executedAt: t.executedAt,
       notes: t.notes,

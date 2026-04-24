@@ -9,6 +9,8 @@ export interface Transaction {
   fees: number;
   currency: string;
   account: string | null;
+  firm: string | null;
+  accountNumber: string | null;
   orderType: string | null;
   executedAt: string;
   notes: string | null;

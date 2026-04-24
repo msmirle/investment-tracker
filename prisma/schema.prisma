@@ -33,6 +33,8 @@ model Transaction {
   fees       Float    @default(0)
   currency   String   @default("USD")
   account    String?
+  firm       String?  // e.g. Investia, Questrade
+  accountNumber String? // e.g. 317382565
   orderType  String?  // MARKET | LIMIT | ...
   executedAt DateTime
   notes      String?

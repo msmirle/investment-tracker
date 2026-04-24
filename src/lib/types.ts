@@ -15,6 +15,8 @@ export interface EvaluatedHolding {
   realizedGain?: number;
   txCount?: number;
   displayCurrency: string;
+  firm?: string | null;
+  accountNumber?: string | null;
   error?: string;
 }
 

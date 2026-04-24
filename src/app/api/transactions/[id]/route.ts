@@ -13,6 +13,8 @@ interface PatchBody {
   fees?: number;
   currency?: string;
   account?: string | null;
+  firm?: string | null;
+  accountNumber?: string | null;
   orderType?: string | null;
   executedAt?: string;
   notes?: string | null;
@@ -38,6 +40,8 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   if (body.fees !== undefined) data.fees = body.fees;
   if (body.currency !== undefined) data.currency = body.currency.toUpperCase();
   if (body.account !== undefined) data.account = body.account?.trim() || null;
+  if (body.firm !== undefined) data.firm = body.firm?.trim() || null;
+  if (body.accountNumber !== undefined) data.accountNumber = body.accountNumber?.trim() || null;
   if (body.orderType !== undefined) data.orderType = body.orderType?.trim() || null;
   if (body.executedAt !== undefined) data.executedAt = new Date(body.executedAt);
   if (body.notes !== undefined) data.notes = body.notes?.trim() || null;

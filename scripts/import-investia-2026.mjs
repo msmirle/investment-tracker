@@ -14,16 +14,16 @@ const NOTE = "Synthetic position opener from Investia Q1 2026 statement (book-co
 
 const holdings = [
   // RRSP #317382565
-  { account: "Investia RRSP",  symbol: "FID7251",  name: "Fidelity Inflation-Focused Series B",              qty: 5939.8342, book: 61858.62 },
+  { account: "Investia RRSP", firm: "Investia", accountNumber: "317382565", symbol: "FID7251",  name: "Fidelity Inflation-Focused Series B",              qty: 5939.8342, book: 61858.62 },
   // CCM is the IA Clarington FundServ prefix (statement shows IA Clarington but fund code 2470 resolves as CCM2470 on Fundata/Globe & Mail)
-  { account: "Investia RRSP",  symbol: "CCM2470",  name: "IA Clarington Loomis Global Allocation Series A",  qty: 1119.1550, book: 28272.99 },
-  { account: "Investia RRSP",  symbol: "TDB652",   name: "TD Global Entertainment & Communication Series I", qty:   73.8880, book: 11265.47 },
-  { account: "Investia RRSP",  symbol: "TDB310",   name: "TD US Capital Reinvestment Advisor Series",        qty: 2306.8640, book: 70420.02 },
+  { account: "Investia RRSP", firm: "Investia", accountNumber: "317382565", symbol: "CCM2470",  name: "IA Clarington Loomis Global Allocation Series A",  qty: 1119.1550, book: 28272.99 },
+  { account: "Investia RRSP", firm: "Investia", accountNumber: "317382565", symbol: "TDB652",   name: "TD Global Entertainment & Communication Series I", qty:   73.8880, book: 11265.47 },
+  { account: "Investia RRSP", firm: "Investia", accountNumber: "317382565", symbol: "TDB310",   name: "TD US Capital Reinvestment Advisor Series",        qty: 2306.8640, book: 70420.02 },
   // LIRA #317386660
-  { account: "Investia LIRA",  symbol: "DYN037",   name: "Dynamic Diversified Inflation Focused Series A",   qty: 1006.7924, book: 11562.51 },
-  { account: "Investia LIRA",  symbol: "FID299",   name: "Fidelity Global Health Care Series B",             qty:  292.4358, book: 15811.86 },
+  { account: "Investia LIRA", firm: "Investia", accountNumber: "317386660", symbol: "DYN037",   name: "Dynamic Diversified Inflation Focused Series A",   qty: 1006.7924, book: 11562.51 },
+  { account: "Investia LIRA", firm: "Investia", accountNumber: "317386660", symbol: "FID299",   name: "Fidelity Global Health Care Series B",             qty:  292.4358, book: 15811.86 },
   // TFSA #317387586
-  { account: "Investia TFSA",  symbol: "TDB627",   name: "TD Dividend Income Series I",                      qty:  649.9480, book: 31778.04 },
+  { account: "Investia TFSA", firm: "Investia", accountNumber: "317387586", symbol: "TDB627",   name: "TD Dividend Income Series I",                      qty:  649.9480, book: 31778.04 },
 ];
 
 for (const h of holdings) {
@@ -39,6 +39,8 @@ for (const h of holdings) {
       fees: 0,
       currency: CUR,
       account: h.account,
+      firm: h.firm,
+      accountNumber: h.accountNumber,
       orderType: "MARKET",
       executedAt: DATE,
       notes: NOTE,

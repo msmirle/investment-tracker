@@ -28,6 +28,8 @@ export function EditTransactionModal({ transaction, onClose, onSaved }: Props) {
     fees: "",
     currency: "USD",
     account: "",
+    firm: "",
+    accountNumber: "",
     orderType: "MARKET",
     executedAt: "",
     notes: "",
@@ -47,6 +49,8 @@ export function EditTransactionModal({ transaction, onClose, onSaved }: Props) {
       fees: String(transaction.fees || 0),
       currency: transaction.currency,
       account: transaction.account || "",
+      firm: transaction.firm || "",
+      accountNumber: transaction.accountNumber || "",
       orderType: transaction.orderType || "MARKET",
       executedAt: toLocalInput(transaction.executedAt),
       notes: transaction.notes || "",
@@ -83,6 +87,8 @@ export function EditTransactionModal({ transaction, onClose, onSaved }: Props) {
           fees: form.fees ? parseFloat(form.fees) : 0,
           currency: form.currency,
           account: form.account || null,
+          firm: form.firm || null,
+          accountNumber: form.accountNumber || null,
           orderType: form.orderType || null,
           executedAt: new Date(form.executedAt).toISOString(),
           notes: form.notes || null,
@@ -240,6 +246,31 @@ export function EditTransactionModal({ transaction, onClose, onSaved }: Props) {
               value={form.executedAt}
               onChange={(e) => setForm({ ...form, executedAt: e.target.value })}
               required
+            />
+          </div>
+          <div>
+            <label className="label">Firm</label>
+            <input
+              className="input"
+              title="Firm"
+              placeholder="Questrade, Investia"
+              list="firm-suggestions-edit"
+              value={form.firm}
+              onChange={(e) => setForm({ ...form, firm: e.target.value })}
+            />
+            <datalist id="firm-suggestions-edit">
+              <option value="Questrade" />
+              <option value="Investia" />
+            </datalist>
+          </div>
+          <div>
+            <label className="label">Account #</label>
+            <input
+              className="input"
+              title="Account number"
+              placeholder="52033641"
+              value={form.accountNumber}
+              onChange={(e) => setForm({ ...form, accountNumber: e.target.value })}
             />
           </div>
           <div>

@@ -49,6 +49,8 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
               <th className="text-right px-4 py-3">Fees</th>
               <th className="text-right px-4 py-3">Total</th>
               <th className="text-left px-4 py-3">Order</th>
+              <th className="text-left px-4 py-3">Firm</th>
+              <th className="text-left px-4 py-3">Account #</th>
               <th className="text-left px-4 py-3">Account</th>
               <th className="text-right px-4 py-3"></th>
             </tr>
@@ -87,6 +89,8 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
                     {fmtCurrency(total, t.currency)}
                   </td>
                   <td className="px-4 py-3 text-xs text-muted">{t.orderType || "—"}</td>
+                  <td className="px-4 py-3 text-xs text-muted">{t.firm || "—"}</td>
+                  <td className="px-4 py-3 text-xs text-muted tabular-nums">{t.accountNumber || "—"}</td>
                   <td className="px-4 py-3 text-xs text-muted truncate max-w-[12rem]">
                     {t.account || "—"}
                   </td>

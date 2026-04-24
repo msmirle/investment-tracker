@@ -31,6 +31,8 @@ export function PositionsTable({ positions, currency }: Props) {
             <tr>
               <th className="text-left px-5 py-3">Symbol</th>
               <th className="text-left px-4 py-3">Type</th>
+              <th className="text-left px-4 py-3">Firm</th>
+              <th className="text-left px-4 py-3">Account #</th>
               <th className="text-right px-4 py-3">Quantity</th>
               <th className="text-right px-4 py-3">Avg Cost</th>
               <th className="text-right px-4 py-3">Price</th>
@@ -56,6 +58,8 @@ export function PositionsTable({ positions, currency }: Props) {
                       {h.assetType}
                     </span>
                   </td>
+                  <td className="px-4 py-3 text-xs text-muted">{h.firm || "—"}</td>
+                  <td className="px-4 py-3 text-xs text-muted tabular-nums">{h.accountNumber || "—"}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{fmtNumber(h.quantity, 6)}</td>
                   <td className="px-4 py-3 text-right tabular-nums text-muted">
                     {fmtCurrency(avgCost, h.costCurrency)}
