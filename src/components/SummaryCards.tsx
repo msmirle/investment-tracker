@@ -37,21 +37,19 @@ export function SummaryCards({ holdings, currency }: { holdings: EvaluatedHoldin
           {Object.keys(byType).length === 0 && <div className="text-sm text-muted">No data</div>}
           {Object.entries(byType).map(([type, v]) => {
             const pct = totalMarket > 0 ? (v / totalMarket) * 100 : 0;
+            const label = type === "MUTUAL_FUND" ? "MF" : type;
+            // Snap to the nearest 5% so the width comes from a static CSS
+            // rule (keyed off data-pct) instead of an inline style.
+            const bucket = Math.max(0, Math.min(100, Math.round(pct / 5) * 5));
             return (
-              <div key={type} className="flex items-center gap-2 text-sm">
-                <span className="w-14 text-muted">{type === "MUTUAL_FUND" ? "MF" : type}</span>
-                <div
-                  className="flex-1 bg-panel2 rounded-full h-2 overflow-hidden"
-                  role="progressbar"
-                  aria-valuenow={Math.round(pct)}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                >
-                  <div
-                    className="h-full bg-gradient-to-r from-accent to-accent2 transition-all"
-                    /* eslint-disable-next-line react/forbid-dom-props */
-                    style={{ width: `${pct.toFixed(1)}%` }}
-                  />
+              <div
+                key={type}
+                className="flex items-center gap-2 text-sm"
+                aria-label={`${label} allocation ${pct.toFixed(0)} percent`}
+              >
+                <span className="w-14 text-muted">{label}</span>
+                <div aria-hidden="true" className="alloc-track" data-pct={bucket}>
+                  <div className="alloc-fill" />
                 </div>
                 <span className="w-12 text-right text-xs">{pct.toFixed(0)}%</span>
               </div>

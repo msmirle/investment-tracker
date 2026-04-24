@@ -41,3 +41,34 @@ html, body {
 .pill {
   @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold;
 }
+
+/* Allocation bar fill — width comes from the `data-pct` attribute on the
+   parent track, so the colored fill doesn't need inline styles. */
+.alloc-track {
+  @apply flex-1 bg-panel2 rounded-full h-2 overflow-hidden relative;
+}
+.alloc-fill {
+  @apply absolute inset-y-0 left-0 bg-gradient-to-r from-accent to-accent2 transition-all;
+  width: 0%;
+}
+.alloc-track[data-pct="0"] .alloc-fill { width: 0%; }
+.alloc-track[data-pct="5"] .alloc-fill { width: 5%; }
+.alloc-track[data-pct="10"] .alloc-fill { width: 10%; }
+.alloc-track[data-pct="15"] .alloc-fill { width: 15%; }
+.alloc-track[data-pct="20"] .alloc-fill { width: 20%; }
+.alloc-track[data-pct="25"] .alloc-fill { width: 25%; }
+.alloc-track[data-pct="30"] .alloc-fill { width: 30%; }
+.alloc-track[data-pct="35"] .alloc-fill { width: 35%; }
+.alloc-track[data-pct="40"] .alloc-fill { width: 40%; }
+.alloc-track[data-pct="45"] .alloc-fill { width: 45%; }
+.alloc-track[data-pct="50"] .alloc-fill { width: 50%; }
+.alloc-track[data-pct="55"] .alloc-fill { width: 55%; }
+.alloc-track[data-pct="60"] .alloc-fill { width: 60%; }
+.alloc-track[data-pct="65"] .alloc-fill { width: 65%; }
+.alloc-track[data-pct="70"] .alloc-fill { width: 70%; }
+.alloc-track[data-pct="75"] .alloc-fill { width: 75%; }
+.alloc-track[data-pct="80"] .alloc-fill { width: 80%; }
+.alloc-track[data-pct="85"] .alloc-fill { width: 85%; }
+.alloc-track[data-pct="90"] .alloc-fill { width: 90%; }
+.alloc-track[data-pct="95"] .alloc-fill { width: 95%; }
+.alloc-track[data-pct="100"] .alloc-fill { width: 100%; }
