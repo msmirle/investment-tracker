@@ -39,7 +39,7 @@ export function SummaryCards({ holdings, currency }: { holdings: EvaluatedHoldin
             const pct = totalMarket > 0 ? (v / totalMarket) * 100 : 0;
             return (
               <div key={type} className="flex items-center gap-2 text-sm">
-                <span className="w-14 text-muted">{type}</span>
+                <span className="w-14 text-muted">{type === "MUTUAL_FUND" ? "MF" : type}</span>
                 <div
                   className="flex-1 bg-panel2 rounded-full h-2 overflow-hidden"
                   role="progressbar"
