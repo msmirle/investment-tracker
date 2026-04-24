@@ -75,7 +75,7 @@ export function PerformanceChart({ currency, firms, symbol, accountNumber, refre
         <div className="flex-1 flex items-center justify-center text-muted text-sm">No history available</div>
       )}
       {!loading && !error && series.length > 0 && (
-        <div className="flex-1">
+        <div className="flex-1 chart-sensitive">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={series} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <defs>

@@ -117,11 +117,13 @@ export function AdvisorButton({ currency }: { currency: string }) {
                 <p className="text-xs text-muted mt-1">
                   As of {result.asOf} · {result.holdingsCount} holdings ·
                   {" "}
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: result.displayCurrency,
-                    maximumFractionDigits: 0,
-                  }).format(result.totalMarketValue)}
+                  <span className="sensitive">
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: result.displayCurrency,
+                      maximumFractionDigits: 0,
+                    }).format(result.totalMarketValue)}
+                  </span>
                 </p>
               </div>
               <button type="button" className="btn-ghost text-xs" onClick={close}>
@@ -130,7 +132,7 @@ export function AdvisorButton({ currency }: { currency: string }) {
             </div>
 
             <div className="flex-1 overflow-y-auto py-3 pr-2 space-y-4 text-sm leading-relaxed">
-              <article>{renderMarkdown(result.analysis)}</article>
+              <article className="chart-sensitive">{renderMarkdown(result.analysis)}</article>
 
               {messages.length > 0 && (
                 <div className="border-t border-border pt-3 space-y-3">
@@ -149,7 +151,7 @@ export function AdvisorButton({ currency }: { currency: string }) {
                       {m.role === "user" ? (
                         <div className="whitespace-pre-wrap">{m.content}</div>
                       ) : (
-                        <article>{renderMarkdown(m.content)}</article>
+                        <article className="chart-sensitive">{renderMarkdown(m.content)}</article>
                       )}
                     </div>
                   ))}

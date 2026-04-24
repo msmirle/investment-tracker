@@ -70,7 +70,7 @@ export function PositionsTable({ positions, currency, selectedId, onSelect }: Pr
                   <td className="px-4 py-3 text-xs text-muted">{h.firm || "—"}</td>
                   <td className="px-4 py-3 text-xs text-muted tabular-nums">{h.accountNumber || "—"}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{fmtNumber(h.quantity, 6)}</td>
-                  <td className="px-4 py-3 text-right tabular-nums text-muted">
+                  <td className="px-4 py-3 text-right tabular-nums text-muted sensitive">
                     {fmtCurrency(avgCost, h.costCurrency)}
                   </td>
                   {(() => {
@@ -82,11 +82,11 @@ export function PositionsTable({ positions, currency, selectedId, onSelect }: Pr
                       <td className={`px-4 py-3 text-right tabular-nums ${priceTone}`}>
                         {h.currentPrice !== null ? (
                           <>
-                            <div className="font-medium">
+                            <div className="font-medium sensitive">
                               {fmtCurrency(h.currentPrice, h.priceCurrency || "USD")}
                             </div>
                             {dcPct !== null && (
-                              <div className="text-xs">
+                              <div className="text-xs sensitive">
                                 {arrow} {fmtPct(dcPct)}
                               </div>
                             )}
@@ -97,20 +97,20 @@ export function PositionsTable({ positions, currency, selectedId, onSelect }: Pr
                       </td>
                     );
                   })()}
-                  <td className="px-4 py-3 text-right tabular-nums font-medium">
+                  <td className="px-4 py-3 text-right tabular-nums font-medium sensitive">
                     {h.currentPrice !== null
                       ? fmtCurrency(h.quantity * h.currentPrice, h.priceCurrency || currency)
                       : fmtCurrency(h.marketValue, currency)}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-muted">
+                  <td className="px-4 py-3 text-right tabular-nums text-muted sensitive">
                     {fmtCurrency(h.costBasis, h.costCurrency)}
                   </td>
                   <td className={`px-4 py-3 text-right tabular-nums ${tone}`}>
-                    <div className="font-medium">{fmtCurrency(h.gain, currency)}</div>
-                    <div className="text-xs">{fmtPct(h.gainPct)}</div>
+                    <div className="font-medium sensitive">{fmtCurrency(h.gain, currency)}</div>
+                    <div className="text-xs sensitive">{fmtPct(h.gainPct)}</div>
                   </td>
                   <td className={`px-4 py-3 text-right tabular-nums ${realizedTone}`}>
-                    {fmtCurrency(h.realizedGain ?? 0, currency)}
+                    <span className="sensitive">{fmtCurrency(h.realizedGain ?? 0, currency)}</span>
                   </td>
                 </tr>
               );
@@ -128,14 +128,14 @@ export function PositionsTable({ positions, currency, selectedId, onSelect }: Pr
               return (
                 <tr>
                   <td className="px-5 py-3" colSpan={7}>Total ({positions.length} {positions.length === 1 ? "position" : "positions"})</td>
-                  <td className="px-4 py-3 text-right tabular-nums">{fmtCurrency(mv, currency)}</td>
-                  <td className="px-4 py-3 text-right tabular-nums text-muted">{fmtCurrency(book, currency)}</td>
+                  <td className="px-4 py-3 text-right tabular-nums sensitive">{fmtCurrency(mv, currency)}</td>
+                  <td className="px-4 py-3 text-right tabular-nums text-muted sensitive">{fmtCurrency(book, currency)}</td>
                   <td className={`px-4 py-3 text-right tabular-nums ${gainTone}`}>
-                    <div>{fmtCurrency(gain, currency)}</div>
-                    <div className="text-xs font-normal">{fmtPct(gainPct)}</div>
+                    <div className="sensitive">{fmtCurrency(gain, currency)}</div>
+                    <div className="text-xs font-normal sensitive">{fmtPct(gainPct)}</div>
                   </td>
                   <td className={`px-4 py-3 text-right tabular-nums ${realizedTone}`}>
-                    {fmtCurrency(realized, currency)}
+                    <span className="sensitive">{fmtCurrency(realized, currency)}</span>
                   </td>
                 </tr>
               );

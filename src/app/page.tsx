@@ -10,6 +10,7 @@ import { StatementImport } from "@/components/StatementImport";
 import { AdvisorButton } from "@/components/AdvisorButton";
 import { EditTransactionModal } from "@/components/EditTransactionModal";
 import { PriceOverridesPanel } from "@/components/PriceOverridesPanel";
+import { PrivacyProvider, PrivacyToggle, usePrivacy } from "@/lib/privacy";
 import type { PortfolioResponse } from "@/lib/types";
 import type { Transaction } from "@/lib/transaction-types";
 
@@ -26,6 +27,15 @@ function formatAgo(d: Date): string {
 }
 
 export default function HomePage() {
+  return (
+    <PrivacyProvider>
+      <HomeInner />
+    </PrivacyProvider>
+  );
+}
+
+function HomeInner() {
+  const { hidden } = usePrivacy();
   const [currency, setCurrency] = useState("CAD");
   const [selectedFirms, setSelectedFirms] = useState<string[]>([]);
   const [selectedPositionId, setSelectedPositionId] = useState<string | null>(null);
@@ -108,7 +118,10 @@ export default function HomePage() {
     setSelectedFirms((prev) => (prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]));
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <main
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6"
+      data-privacy={hidden ? "on" : "off"}
+    >
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
@@ -173,6 +186,7 @@ export default function HomePage() {
           </button>
           <StatementImport onImported={refresh} />
           <AdvisorButton currency={currency} />
+          <PrivacyToggle />
         </div>
       </header>
 

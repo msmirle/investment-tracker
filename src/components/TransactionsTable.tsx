@@ -80,13 +80,13 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums">{fmtNumber(t.quantity, 6)}</td>
-                  <td className="px-4 py-3 text-right tabular-nums">
+                  <td className="px-4 py-3 text-right tabular-nums sensitive">
                     {fmtCurrency(t.price, t.currency)}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-muted">
+                  <td className="px-4 py-3 text-right tabular-nums text-muted sensitive">
                     {t.fees ? fmtCurrency(t.fees, t.currency) : "—"}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums font-medium">
+                  <td className="px-4 py-3 text-right tabular-nums font-medium sensitive">
                     {fmtCurrency(total, t.currency)}
                   </td>
                   <td className="px-4 py-3 text-xs text-muted">{t.orderType || "—"}</td>

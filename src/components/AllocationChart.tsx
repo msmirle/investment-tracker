@@ -66,7 +66,7 @@ export function AllocationChart({ holdings, currency }: { holdings: EvaluatedHol
       {data.length === 0 ? (
         <div className="flex-1 flex items-center justify-center text-muted text-sm">No data yet</div>
       ) : (
-        <div className="flex-1">
+        <div className="flex-1 chart-sensitive">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie

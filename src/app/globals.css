@@ -72,3 +72,37 @@ html, body {
 .alloc-track[data-pct="90"] .alloc-fill { width: 90%; }
 .alloc-track[data-pct="95"] .alloc-fill { width: 95%; }
 .alloc-track[data-pct="100"] .alloc-fill { width: 100%; }
+
+/* ----- Privacy mode: censor financial values with a squiggly line ----- */
+/* The squiggle inherits the cell's currentColor (green for gains, red for
+   losses, etc.) because we only wipe the fill, not the computed color. */
+[data-privacy="on"] .sensitive {
+  position: relative;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none !important;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+[data-privacy="on"] .sensitive::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 0.7em;
+  transform: translateY(-50%);
+  background-color: currentColor;
+  opacity: 0.7;
+  pointer-events: none;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 24' preserveAspectRatio='none'><path d='M0 12 Q 6 2 12 12 T 24 12 T 36 12 T 48 12 T 60 12 T 72 12 T 84 12 T 96 12 T 108 12 T 120 12' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/></svg>") repeat-x center / auto 100%;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 24' preserveAspectRatio='none'><path d='M0 12 Q 6 2 12 12 T 24 12 T 36 12 T 48 12 T 60 12 T 72 12 T 84 12 T 96 12 T 108 12 T 120 12' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/></svg>") repeat-x center / auto 100%;
+}
+
+/* Charts: can't easily censor per-value, so blur the whole viz. */
+[data-privacy="on"] .chart-sensitive {
+  filter: blur(10px) saturate(1.2);
+  transition: filter 0.2s ease;
+  -webkit-user-select: none;
+  user-select: none;
+}

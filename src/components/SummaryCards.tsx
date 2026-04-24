@@ -18,18 +18,18 @@ export function SummaryCards({ holdings, currency }: { holdings: EvaluatedHoldin
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div className="card">
         <div className="text-muted text-xs uppercase tracking-widest">Market Value</div>
-        <div className="text-3xl font-semibold mt-2">{fmtCurrency(totalMarket, currency)}</div>
+        <div className="text-3xl font-semibold mt-2 sensitive">{fmtCurrency(totalMarket, currency)}</div>
         <div className="text-xs text-muted mt-1">{holdings.length} holdings</div>
       </div>
       <div className="card">
         <div className="text-muted text-xs uppercase tracking-widest">Book Value</div>
-        <div className="text-3xl font-semibold mt-2">{fmtCurrency(totalBook, currency)}</div>
+        <div className="text-3xl font-semibold mt-2 sensitive">{fmtCurrency(totalBook, currency)}</div>
         <div className="text-xs text-muted mt-1">Total invested</div>
       </div>
       <div className="card">
         <div className="text-muted text-xs uppercase tracking-widest">Total Gain/Loss</div>
-        <div className={`text-3xl font-semibold mt-2 ${tone}`}>{fmtCurrency(gain, currency)}</div>
-        <div className={`text-xs mt-1 ${tone}`}>{fmtPct(gainPct)}</div>
+        <div className={`text-3xl font-semibold mt-2 sensitive ${tone}`}>{fmtCurrency(gain, currency)}</div>
+        <div className={`text-xs mt-1 sensitive ${tone}`}>{fmtPct(gainPct)}</div>
       </div>
       <div className="card">
         <div className="text-muted text-xs uppercase tracking-widest">Allocation</div>
