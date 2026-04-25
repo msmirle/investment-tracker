@@ -159,13 +159,62 @@ export async function POST(req: Request) {
   if (!(file instanceof Blob)) {
     return NextResponse.json({ error: "Missing 'file' field" }, { status: 400 });
   }
-  const filename = "filename" in file && typeof (file as File).name === "string" ? (file as File).name : "statement.pdf";
+  const filename = "filename" in file && typeof (file as File).name === "string" ? (file as File).name : "statement";
   if (file.size > 20 * 1024 * 1024) {
     return NextResponse.json({ error: "File too large (max 20 MB)" }, { status: 400 });
   }
 
+  const fileType = (file as File).type || "";
+  const lowerName = filename.toLowerCase();
+  const isImage =
+    fileType.startsWith("image/") ||
+    /\.(png|jpe?g|webp|gif)$/i.test(lowerName);
+  const isPdf =
+    fileType === "application/pdf" || lowerName.endsWith(".pdf");
+  if (!isImage && !isPdf) {
+    return NextResponse.json(
+      { error: "Unsupported file type. Upload a PDF or an image (PNG/JPG/WebP/GIF)." },
+      { status: 400 },
+    );
+  }
+
   const bytes = Buffer.from(await file.arrayBuffer());
   const base64 = bytes.toString("base64");
+  const mime = isPdf
+    ? "application/pdf"
+    : fileType.startsWith("image/")
+      ? fileType
+      : lowerName.endsWith(".png")
+        ? "image/png"
+        : lowerName.endsWith(".webp")
+          ? "image/webp"
+          : lowerName.endsWith(".gif")
+            ? "image/gif"
+            : "image/jpeg";
+
+  const userContent: Array<
+    | { type: "input_text"; text: string }
+    | { type: "input_file"; filename: string; file_data: string }
+    | { type: "input_image"; image_url: string; detail: "auto" | "low" | "high" }
+  > = [
+    {
+      type: "input_text",
+      text: isImage
+        ? "Extract all transactions and distributions visible in this screenshot of a statement."
+        : "Extract all transactions and distributions from this statement.",
+    },
+    isImage
+      ? {
+          type: "input_image",
+          image_url: `data:${mime};base64,${base64}`,
+          detail: "high",
+        }
+      : {
+          type: "input_file",
+          filename,
+          file_data: `data:application/pdf;base64,${base64}`,
+        },
+  ];
 
   let parsed: ExtractionResult;
   try {
@@ -178,17 +227,7 @@ export async function POST(req: Request) {
         },
         {
           role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: "Extract all transactions and distributions from this statement.",
-            },
-            {
-              type: "input_file",
-              filename,
-              file_data: `data:application/pdf;base64,${base64}`,
-            },
-          ],
+          content: userContent,
         },
       ],
       text: {

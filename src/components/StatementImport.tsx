@@ -126,17 +126,17 @@ export function StatementImport({ onImported }: { onImported: () => void }) {
           className="btn-ghost"
           onClick={() => inputRef.current?.click()}
           disabled={busy}
-          title="Upload a brokerage or fund statement (PDF) and have AI extract transactions"
+          title="Upload a brokerage/fund statement (PDF) or a screenshot (PNG/JPG/WebP/GIF) and have AI extract transactions"
         >
           {busy ? "Analyzing…" : "Analyze Statement (AI)"}
         </button>
         <input
           ref={inputRef}
           type="file"
-          accept="application/pdf,.pdf"
+          accept="application/pdf,.pdf,image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp,.gif"
           className="hidden"
-          title="Choose a PDF statement"
-          aria-label="Choose a PDF statement to analyze"
+          title="Choose a PDF statement or screenshot image"
+          aria-label="Choose a PDF statement or screenshot image to analyze"
           onChange={onFile}
         />
         {status && !analysis && <span className="text-xs text-muted">{status}</span>}
