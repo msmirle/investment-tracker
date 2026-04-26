@@ -1,8 +1,9 @@
 // Prisma schema — SQLite for zero-config local persistence.
 generator client {
   provider      = "prisma-client-js"
-  // native = local dev (Windows/macOS/Linux glibc); linux-musl = Alpine in Docker.
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  // native = local dev. Container is Debian (glibc), so we ship engines for
+  // amd64, arm64, and 32-bit arm (Raspberry Pi 2/3 in 32-bit mode).
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x", "linux-arm-openssl-3.0.x"]
 }
 
 datasource db {
