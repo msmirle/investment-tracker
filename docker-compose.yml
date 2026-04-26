@@ -1,0 +1,23 @@
+services:
+  app:
+    image: ghcr.io/msmirle_microsoft/investment-tracker:latest
+    container_name: investment-tracker
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Persistent SQLite path inside the container; the named volume is mounted there.
+      DATABASE_URL: "file:/app/data/dev.db"
+      # AI features — set these to enable Statement Analyzer and Advisor.
+      AZURE_OPENAI_ENDPOINT: "${AZURE_OPENAI_ENDPOINT:-}"
+      AZURE_OPENAI_API_KEY: "${AZURE_OPENAI_API_KEY:-}"
+      AZURE_OPENAI_DEPLOYMENT: "${AZURE_OPENAI_DEPLOYMENT:-gpt-4o}"
+      AZURE_OPENAI_API_VERSION: "${AZURE_OPENAI_API_VERSION:-2025-03-01-preview}"
+      # Or, alternatively, plain OpenAI:
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      OPENAI_MODEL: "${OPENAI_MODEL:-gpt-4o}"
+    volumes:
+      - investment-tracker-data:/app/data
+
+volumes:
+  investment-tracker-data:

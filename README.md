@@ -47,3 +47,47 @@ See [`sample-holdings.csv`](sample-holdings.csv) for an example.
 - The historical chart uses today's FX rate to convert each asset's historical native-currency prices into the display currency; this is a reasonable approximation, not a strict daily-FX reconstruction.
 - Yahoo Finance is an unofficial source and may occasionally rate-limit or break. For crypto, CoinGecko's free tier is generous but rate-limited.
 - This app is for personal tracking and is not financial advice.
+
+## Run with Docker (Ubuntu / any Linux)
+
+A multi-arch image (linux/amd64 + linux/arm64) is published to GitHub Container Registry on every push to `main`:
+
+```
+ghcr.io/msmirle_microsoft/investment-tracker:latest
+```
+
+### One-liner
+
+```bash
+docker run -d \
+  --name investment-tracker \
+  -p 3000:3000 \
+  -v investment-tracker-data:/app/data \
+  -e AZURE_OPENAI_ENDPOINT="https://<your-aoai>.openai.azure.com/" \
+  -e AZURE_OPENAI_API_KEY="<key>" \
+  -e AZURE_OPENAI_DEPLOYMENT="gpt-4o" \
+  -e AZURE_OPENAI_API_VERSION="2025-03-01-preview" \
+  --restart unless-stopped \
+  ghcr.io/msmirle_microsoft/investment-tracker:latest
+```
+
+The SQLite database lives on the named volume `investment-tracker-data` (mounted at `/app/data` inside the container) so it survives container upgrades. AI features (Statement Analyzer, Advisor) are optional — omit the env vars to disable them.
+
+### Or with docker compose
+
+A ready-made `docker-compose.yml` is included. Put your AI keys in a sibling `.env` file and run:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+### Pulling from GHCR
+
+The package is private by default. Either make it public on GitHub (Packages → settings) or authenticate:
+
+```bash
+echo "$GHCR_PAT" | docker login ghcr.io -u <github-user> --password-stdin
+```
+
+A classic personal-access token with `read:packages` is sufficient.
