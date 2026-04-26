@@ -14,7 +14,7 @@ import { PrivacyProvider, PrivacyToggle, usePrivacy } from "@/lib/privacy";
 import type { PortfolioResponse } from "@/lib/types";
 import type { Transaction } from "@/lib/transaction-types";
 
-const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CHF", "CNY", "INR", "BRL", "MXN", "SGD"];
+const CURRENCIES = ["USD", "CAD"];
 
 function formatAgo(d: Date): string {
   const s = Math.max(0, Math.round((Date.now() - d.getTime()) / 1000));

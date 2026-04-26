@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import type { Transaction } from "@/lib/transaction-types";
 
-const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CHF", "CNY", "INR", "BRL", "MXN", "SGD"];
+const CURRENCIES = ["USD", "CAD"];
 const ORDER_TYPES = ["MARKET", "LIMIT", "STOP", "STOP_LIMIT", "GTC"];
 
 interface Props {

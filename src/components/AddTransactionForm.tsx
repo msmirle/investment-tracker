@@ -5,7 +5,7 @@ interface Props {
   onAdded: () => void;
 }
 
-const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CHF", "CNY", "INR", "BRL", "MXN", "SGD"];
+const CURRENCIES = ["USD", "CAD"];
 const ORDER_TYPES = ["MARKET", "LIMIT", "STOP", "STOP_LIMIT", "GTC"];
 
 export function AddTransactionForm({ onAdded }: Props) {
