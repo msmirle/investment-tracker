@@ -18,7 +18,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL="file:/tmp/build.db"
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npx prisma generate \
+# Ensure public/ exists even if the project doesn't ship one.
+RUN mkdir -p public \
+ && npx prisma generate \
  && npm run build
 
 # ---------- runner ----------
