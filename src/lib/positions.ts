@@ -137,6 +137,7 @@ export interface EvaluatedPosition {
   costCurrency: string;
   currentPrice: number | null;
   priceCurrency: string | null;
+  priceAsOf: number | null; // epoch ms; null when no live price
   previousClose: number | null; // in priceCurrency
   dayChange: number | null;     // in displayCurrency, across quantity
   dayChangePct: number | null;  // percent vs previous close
@@ -197,6 +198,7 @@ export async function evaluatePositions(
         costCurrency: p.currency,
         currentPrice: null,
         priceCurrency: null,
+        priceAsOf: null,
         previousClose: null,
         dayChange: null,
         dayChangePct: null,
@@ -231,6 +233,7 @@ export async function evaluatePositions(
       costCurrency: p.currency,
       currentPrice: q.price,
       priceCurrency: q.currency,
+      priceAsOf: typeof q.asOf === "number" ? q.asOf : null,
       previousClose: prev,
       dayChange,
       dayChangePct,

@@ -11,6 +11,8 @@ export interface Quote {
   currency: string;
   name?: string;
   previousClose?: number;
+  /** Epoch ms when this quote was last known to be current (upstream timestamp if available, else fetch time). */
+  asOf?: number;
 }
 
 // --- Simple TTL cache ---------------------------------------------------
@@ -39,6 +41,7 @@ interface YahooChartMeta {
   shortName?: string;
   longName?: string;
   instrumentType?: string;
+  regularMarketTime?: number;
 }
 interface YahooChartResponse {
   chart?: {
@@ -98,6 +101,7 @@ async function fundataQuote(symbol: string): Promise<Quote> {
     price,
     currency: "CAD", // CADFUNDS exchange is always CAD
     name: nameMatch ? nameMatch[1] : undefined,
+    asOf: Date.now(),
   };
 }
 
@@ -182,7 +186,7 @@ export async function getQuote(
         typeof pct === "number" && isFinite(pct) && 1 + pct / 100 !== 0
           ? price / (1 + pct / 100)
           : undefined;
-      return { symbol: symbol.toUpperCase(), price, currency: "USD", name: id, previousClose };
+      return { symbol: symbol.toUpperCase(), price, currency: "USD", name: id, previousClose, asOf: Date.now() };
     });
   }
   return cached(`quote:eq:${fetchSymbol.toUpperCase()}`, 60_000, async () => {
@@ -211,6 +215,10 @@ export async function getQuote(
       currency: (meta?.currency ?? "USD").toUpperCase(),
       name: meta?.shortName ?? meta?.longName ?? undefined,
       previousClose,
+      asOf:
+        typeof meta?.regularMarketTime === "number" && isFinite(meta.regularMarketTime)
+          ? meta.regularMarketTime * 1000
+          : Date.now(),
     };
   });
 }

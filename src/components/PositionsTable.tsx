@@ -78,8 +78,17 @@ export function PositionsTable({ positions, currency, selectedId, onSelect }: Pr
                     const priceTone =
                       dcPct === null ? "" : dcPct >= 0 ? "text-good" : "text-bad";
                     const arrow = dcPct === null ? "" : dcPct >= 0 ? "▲" : "▼";
+                    const asOfTitle =
+                      typeof h.priceAsOf === "number" && isFinite(h.priceAsOf)
+                        ? `Price as of ${new Date(h.priceAsOf).toLocaleString()}`
+                        : h.currentPrice !== null
+                          ? "Manual price (no timestamp)"
+                          : undefined;
                     return (
-                      <td className={`px-4 py-3 text-right tabular-nums ${priceTone}`}>
+                      <td
+                        className={`px-4 py-3 text-right tabular-nums ${priceTone}`}
+                        title={asOfTitle}
+                      >
                         {h.currentPrice !== null ? (
                           <>
                             <div className="font-medium sensitive">

@@ -8,6 +8,8 @@ export interface EvaluatedHolding {
   costCurrency: string;
   currentPrice: number | null;
   priceCurrency: string | null;
+  /** Epoch ms; upstream market time for live quotes, fetch time otherwise. Null = manual override or unavailable. */
+  priceAsOf?: number | null;
   previousClose?: number | null;
   dayChange?: number | null;
   dayChangePct?: number | null;
