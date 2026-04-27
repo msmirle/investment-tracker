@@ -80,7 +80,7 @@ export function PositionsTable({ positions, currency, selectedId, onSelect }: Pr
                     const arrow = dcPct === null ? "" : dcPct >= 0 ? "▲" : "▼";
                     const asOfTitle =
                       typeof h.priceAsOf === "number" && isFinite(h.priceAsOf)
-                        ? `Price as of ${new Date(h.priceAsOf).toLocaleString()}`
+                        ? `Price last changed ${new Date(h.priceAsOf).toLocaleString()}`
                         : h.currentPrice !== null
                           ? "Manual price (no timestamp)"
                           : undefined;

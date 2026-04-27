@@ -11,8 +11,34 @@ export interface Quote {
   currency: string;
   name?: string;
   previousClose?: number;
-  /** Epoch ms when this quote was last known to be current (upstream timestamp if available, else fetch time). */
+  /** Epoch ms when this symbol's price was last observed to *change*. Undefined for manual prices or first-ever fetch. */
   asOf?: number;
+}
+
+// --- Last-changed tracker ----------------------------------------------
+// Module-level map of symbol -> { lastPrice, changedAt }. We only update
+// `changedAt` when a freshly fetched price differs from what we last saw,
+// so the UI can show "price last changed at X" instead of "last fetched".
+// In-memory only; on process restart, the first fetch becomes the new
+// baseline (changedAt = that fetch time).
+const lastChangedTracker = new Map<string, { price: number; changedAt: number }>();
+function applyChangeTracking(q: Quote): Quote {
+  const key = q.symbol.toUpperCase();
+  const observedAt = q.asOf ?? Date.now();
+  const prev = lastChangedTracker.get(key);
+  let changedAt: number;
+  if (!prev) {
+    // First time we've seen this symbol this process — treat now as the
+    // baseline. We can't know when it actually changed before this.
+    changedAt = observedAt;
+    lastChangedTracker.set(key, { price: q.price, changedAt });
+  } else if (prev.price !== q.price) {
+    changedAt = observedAt;
+    lastChangedTracker.set(key, { price: q.price, changedAt });
+  } else {
+    changedAt = prev.changedAt;
+  }
+  return { ...q, asOf: changedAt };
 }
 
 // --- Simple TTL cache ---------------------------------------------------
@@ -171,7 +197,7 @@ export async function getQuote(
   const fetchSymbol = (override?.quoteSymbol && override.quoteSymbol.trim()) || symbol;
 
   if (assetType === "CRYPTO") {
-    return cached(`quote:crypto:${fetchSymbol.toUpperCase()}`, 60_000, async () => {
+    const q = await cached(`quote:crypto:${fetchSymbol.toUpperCase()}`, 60_000, async () => {
       const id = await resolveCoinId(fetchSymbol);
       const res = await fetch(
         `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd&include_24hr_change=true`,
@@ -188,8 +214,9 @@ export async function getQuote(
           : undefined;
       return { symbol: symbol.toUpperCase(), price, currency: "USD", name: id, previousClose, asOf: Date.now() };
     });
+    return applyChangeTracking(q);
   }
-  return cached(`quote:eq:${fetchSymbol.toUpperCase()}`, 60_000, async () => {
+  const q = await cached(`quote:eq:${fetchSymbol.toUpperCase()}`, 60_000, async () => {
     // For FundServ-style codes with no Yahoo alias override, go straight
     // to Fundata — Yahoo never has them and would just 404.
     const isFundServ = !override?.quoteSymbol && looksLikeFundServ(fetchSymbol);
@@ -221,6 +248,7 @@ export async function getQuote(
           : Date.now(),
     };
   });
+  return applyChangeTracking(q);
 }
 
 export async function getQuotes(
