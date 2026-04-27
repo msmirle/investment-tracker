@@ -25,7 +25,7 @@ RUN mkdir -p public \
 
 # ---------- runner ----------
 FROM node:20-alpine AS runner
-RUN apk add --no-cache openssl tini
+RUN apk add --no-cache openssl tini su-exec
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -55,7 +55,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_module
 COPY --chown=nextjs:nodejs docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-USER nextjs
+# Entrypoint starts as root so it can fix bind-mount ownership, then drops
+# to the nextjs user via su-exec before running the app.
 EXPOSE 3000
 VOLUME ["/app/data"]
 
