@@ -109,7 +109,7 @@ const JSON_SCHEMA = {
         properties: {
           symbol: { type: "string" },
           name: { type: ["string", "null"] },
-          assetType: { enum: ["STOCK", "ETF", "CRYPTO", "MUTUAL_FUND"] },
+          assetType: { enum: ["STOCK", "ETF", "CRYPTO", "MUTUAL_FUND", "PRIVATE_EQUITY"] },
           action: { enum: ["BUY", "SELL", "DIST"] },
           quantity: { type: "number" },
           price: { type: "number" },

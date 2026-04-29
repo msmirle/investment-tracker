@@ -13,6 +13,7 @@ const typeColors: Record<string, string> = {
   ETF: "bg-cyan-500/20 text-cyan-300",
   CRYPTO: "bg-amber-500/20 text-amber-300",
   MUTUAL_FUND: "bg-emerald-500/20 text-emerald-300",
+  PRIVATE_EQUITY: "bg-purple-500/20 text-purple-300",
 };
 
 function fmtDateTime(iso: string): string {
@@ -76,7 +77,7 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
                   </td>
                   <td className="px-4 py-3">
                     <span className={`pill ${typeColors[t.assetType] ?? "bg-slate-500/20 text-slate-300"}`}>
-                      {t.assetType === "MUTUAL_FUND" ? "MF" : t.assetType}
+                      {t.assetType === "MUTUAL_FUND" ? "MF" : t.assetType === "PRIVATE_EQUITY" ? "PE" : t.assetType}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums">{fmtNumber(t.quantity, 6)}</td>

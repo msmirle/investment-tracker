@@ -2,7 +2,7 @@ export interface EvaluatedHolding {
   id: string;
   symbol: string;
   name: string;
-  assetType: "STOCK" | "ETF" | "CRYPTO" | "MUTUAL_FUND";
+  assetType: "STOCK" | "ETF" | "CRYPTO" | "MUTUAL_FUND" | "PRIVATE_EQUITY";
   quantity: number;
   costBasis: number;
   costCurrency: string;

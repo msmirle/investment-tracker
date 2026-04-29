@@ -19,7 +19,9 @@ const GROUPS: Array<{ key: GroupBy; label: string }> = [
 ];
 
 function typeLabel(t: EvaluatedHolding["assetType"]): string {
-  return t === "MUTUAL_FUND" ? "MF" : t;
+  if (t === "MUTUAL_FUND") return "MF";
+  if (t === "PRIVATE_EQUITY") return "PE";
+  return t;
 }
 
 export function AllocationChart({ holdings, currency }: { holdings: EvaluatedHolding[]; currency: string }) {

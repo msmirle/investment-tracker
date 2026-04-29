@@ -37,7 +37,7 @@ export function SummaryCards({ holdings, currency }: { holdings: EvaluatedHoldin
           {Object.keys(byType).length === 0 && <div className="text-sm text-muted">No data</div>}
           {Object.entries(byType).map(([type, v]) => {
             const pct = totalMarket > 0 ? (v / totalMarket) * 100 : 0;
-            const label = type === "MUTUAL_FUND" ? "MF" : type;
+            const label = type === "MUTUAL_FUND" ? "MF" : type === "PRIVATE_EQUITY" ? "PE" : type;
             // Snap to the nearest 5% so the width comes from a static CSS
             // rule (keyed off data-pct) instead of an inline style.
             const bucket = Math.max(0, Math.min(100, Math.round(pct / 5) * 5));

@@ -121,6 +121,7 @@ export function AddTransactionForm({ onAdded }: Props) {
             <option value="ETF">ETF</option>
             <option value="MUTUAL_FUND">Mutual Fund</option>
             <option value="CRYPTO">Crypto</option>
+            <option value="PRIVATE_EQUITY">Private Equity</option>
           </select>
         </div>
         <div>

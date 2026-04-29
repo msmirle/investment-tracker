@@ -5,7 +5,7 @@ import { fmtCurrency, fmtNumber } from "@/lib/format";
 interface ProposedTx {
   symbol: string;
   name?: string | null;
-  assetType: "STOCK" | "ETF" | "CRYPTO" | "MUTUAL_FUND";
+  assetType: "STOCK" | "ETF" | "CRYPTO" | "MUTUAL_FUND" | "PRIVATE_EQUITY";
   action: "BUY" | "SELL" | "DIST";
   quantity: number;
   price: number;
@@ -204,7 +204,7 @@ export function StatementImport({ onImported }: { onImported: () => void }) {
                           </td>
                           <td className="px-2 py-1.5 tabular-nums">{t.executedAt.slice(0, 10)}</td>
                           <td className="px-2 py-1.5 font-semibold">{t.symbol}</td>
-                          <td className="px-2 py-1.5">{t.assetType === "MUTUAL_FUND" ? "MF" : t.assetType}</td>
+                          <td className="px-2 py-1.5">{t.assetType === "MUTUAL_FUND" ? "MF" : t.assetType === "PRIVATE_EQUITY" ? "PE" : t.assetType}</td>
                           <td className="px-2 py-1.5">{t.action}</td>
                           <td className="px-2 py-1.5 text-right tabular-nums">{fmtNumber(t.quantity, 6)}</td>
                           <td className="px-2 py-1.5 text-right tabular-nums">

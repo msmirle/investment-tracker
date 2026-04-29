@@ -14,6 +14,7 @@ const typeColors: Record<string, string> = {
   ETF: "bg-cyan-500/20 text-cyan-300",
   CRYPTO: "bg-amber-500/20 text-amber-300",
   MUTUAL_FUND: "bg-emerald-500/20 text-emerald-300",
+  PRIVATE_EQUITY: "bg-purple-500/20 text-purple-300",
 };
 
 export function PositionsTable({ positions, currency, selectedId, onSelect }: Props) {
@@ -64,7 +65,7 @@ export function PositionsTable({ positions, currency, selectedId, onSelect }: Pr
                   </td>
                   <td className="px-4 py-3">
                     <span className={`pill ${typeColors[h.assetType] ?? "bg-slate-500/20 text-slate-300"}`}>
-                      {h.assetType === "MUTUAL_FUND" ? "MF" : h.assetType}
+                      {h.assetType === "MUTUAL_FUND" ? "MF" : h.assetType === "PRIVATE_EQUITY" ? "PE" : h.assetType}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-xs text-muted">{h.firm || "—"}</td>

@@ -3,7 +3,7 @@
 // - Crypto: CoinGecko public API.
 // Results are cached in-memory with short TTLs to avoid hammering upstreams.
 
-export type AssetType = "STOCK" | "ETF" | "CRYPTO" | "MUTUAL_FUND";
+export type AssetType = "STOCK" | "ETF" | "CRYPTO" | "MUTUAL_FUND" | "PRIVATE_EQUITY";
 
 export interface Quote {
   symbol: string;
@@ -194,6 +194,11 @@ export async function getQuote(
       currency: (override.manualPriceCurrency ?? "USD").toUpperCase(),
     };
   }
+  // Private equity / illiquid holdings have no public price feed; require
+  // a manual price override and surface a clear error otherwise.
+  if (assetType === "PRIVATE_EQUITY") {
+    throw new Error("Set a manual price for private equity holdings");
+  }
   const fetchSymbol = (override?.quoteSymbol && override.quoteSymbol.trim()) || symbol;
 
   if (assetType === "CRYPTO") {
@@ -311,6 +316,8 @@ export async function getHistory(
 ): Promise<HistoryPoint[]> {
   // Manual-priced symbols have no history series; skip network.
   if (override?.manualPrice != null) return [];
+  // Private equity has no public history feed.
+  if (assetType === "PRIVATE_EQUITY") return [];
   const fetchSymbol = (override?.quoteSymbol && override.quoteSymbol.trim()) || symbol;
   const key = `hist:${assetType}:${fetchSymbol.toUpperCase()}:${days}`;
   return cached(key, 6 * 60 * 60_000, async () => {

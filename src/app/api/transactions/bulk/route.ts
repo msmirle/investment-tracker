@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       const assetType = (t.assetType || "").toUpperCase();
       if (!t.symbol) throw new Error("symbol required");
       if (!["BUY", "SELL", "DIST"].includes(action)) throw new Error("invalid action");
-      if (!["STOCK", "ETF", "CRYPTO", "MUTUAL_FUND"].includes(assetType)) throw new Error("invalid assetType");
+      if (!["STOCK", "ETF", "CRYPTO", "MUTUAL_FUND", "PRIVATE_EQUITY"].includes(assetType)) throw new Error("invalid assetType");
       if (!isFinite(t.quantity) || t.quantity <= 0) throw new Error("invalid quantity");
       if (!isFinite(t.price) || t.price < 0) throw new Error("invalid price");
       const executedAt = new Date(t.executedAt);

@@ -32,7 +32,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   const data: Record<string, unknown> = {};
   if (body.symbol !== undefined) data.symbol = body.symbol.toUpperCase().trim();
   if (body.name !== undefined) data.name = body.name?.trim() || null;
-  if (body.assetType !== undefined && ["STOCK", "ETF", "CRYPTO", "MUTUAL_FUND"].includes(body.assetType))
+  if (body.assetType !== undefined && ["STOCK", "ETF", "CRYPTO", "MUTUAL_FUND", "PRIVATE_EQUITY"].includes(body.assetType))
     data.assetType = body.assetType;
   if (body.action !== undefined && ["BUY", "SELL"].includes(body.action)) data.action = body.action;
   if (body.quantity !== undefined) data.quantity = body.quantity;
