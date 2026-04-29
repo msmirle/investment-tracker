@@ -9,12 +9,13 @@ const PALETTE = [
   "#ec4899", "#14b8a6", "#eab308", "#3b82f6", "#84cc16", "#f97316",
 ];
 
-type GroupBy = "symbol" | "type" | "firm";
+type GroupBy = "symbol" | "type" | "firm" | "account";
 
 const GROUPS: Array<{ key: GroupBy; label: string }> = [
   { key: "symbol", label: "Symbol" },
   { key: "type", label: "Type" },
   { key: "firm", label: "Firm" },
+  { key: "account", label: "Account" },
 ];
 
 function typeLabel(t: EvaluatedHolding["assetType"]): string {
@@ -29,12 +30,23 @@ export function AllocationChart({ holdings, currency }: { holdings: EvaluatedHol
     for (const h of holdings) {
       const mv = h.marketValue ?? 0;
       if (mv <= 0) continue;
-      const key =
-        groupBy === "symbol"
-          ? h.symbol
-          : groupBy === "type"
-          ? typeLabel(h.assetType)
-          : h.firm || "Unassigned";
+      let key: string;
+      if (groupBy === "symbol") {
+        key = h.symbol;
+      } else if (groupBy === "type") {
+        key = typeLabel(h.assetType);
+      } else if (groupBy === "firm") {
+        key = h.firm || "Unassigned";
+      } else {
+        // account: combine firm + account so identical account numbers
+        // at different firms don't collide.
+        const acct = h.accountNumber?.trim();
+        if (!acct) {
+          key = "Unassigned";
+        } else {
+          key = h.firm ? `${h.firm} · ${acct}` : acct;
+        }
+      }
       totals.set(key, (totals.get(key) ?? 0) + mv);
     }
     return Array.from(totals.entries())
