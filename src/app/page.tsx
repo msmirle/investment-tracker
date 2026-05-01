@@ -257,6 +257,7 @@ function HomeInner() {
 
       <footer className="text-center text-xs text-muted pt-4 pb-8">
         Prices via Yahoo Finance &amp; CoinGecko · For personal tracking only
+        <div className="mt-2 italic">&quot;I&apos;m gonna shoot&quot; — MacGruber</div>
       </footer>
     </main>
   );
