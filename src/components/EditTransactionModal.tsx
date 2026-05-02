@@ -119,7 +119,7 @@ export function EditTransactionModal({ transaction, onClose, onSaved }: Props) {
       >
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Edit Transaction</h3>
-          <button type="button" className="text-muted hover:text-slate-100 text-sm" onClick={onClose}>
+          <button type="button" className="text-muted hover:text-fg text-sm" onClick={onClose}>
             Close
           </button>
         </div>

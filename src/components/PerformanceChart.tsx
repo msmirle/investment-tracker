@@ -60,7 +60,7 @@ export function PerformanceChart({ currency, firms, symbol, accountNumber, refre
               key={r.days}
               onClick={() => setDays(r.days)}
               className={`px-2.5 py-1 text-xs rounded-md transition ${
-                days === r.days ? "bg-accent text-white" : "text-muted hover:text-slate-100"
+                days === r.days ? "bg-accent text-white" : "text-muted hover:text-fg"
               }`}
             >
               {r.label}
@@ -80,34 +80,35 @@ export function PerformanceChart({ currency, firms, symbol, accountNumber, refre
             <AreaChart data={series} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="valueGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.6} />
-                  <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                  <stop offset="0%" stopColor="rgb(var(--color-accent))" stopOpacity={0.6} />
+                  <stop offset="100%" stopColor="rgb(var(--color-accent))" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="#2a335a" strokeDasharray="3 3" vertical={false} />
+              <CartesianGrid stroke="rgb(var(--color-border))" strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="date"
-                tick={{ fill: "#94a3b8", fontSize: 11 }}
-                axisLine={{ stroke: "#2a335a" }}
+                tick={{ fill: "rgb(var(--color-muted))", fontSize: 11 }}
+                axisLine={{ stroke: "rgb(var(--color-border))" }}
                 tickLine={false}
                 minTickGap={32}
               />
               <YAxis
-                tick={{ fill: "#94a3b8", fontSize: 11 }}
-                axisLine={{ stroke: "#2a335a" }}
+                tick={{ fill: "rgb(var(--color-muted))", fontSize: 11 }}
+                axisLine={{ stroke: "rgb(var(--color-border))" }}
                 tickLine={false}
                 tickFormatter={(v) => fmtCurrency(v, currency).replace(/\.00$/, "")}
                 width={80}
               />
               <Tooltip
-                contentStyle={{ background: "#141a2f", border: "1px solid #2a335a", borderRadius: 12 }}
-                labelStyle={{ color: "#94a3b8" }}
+                contentStyle={{ background: "rgb(var(--color-panel))", border: "1px solid rgb(var(--color-border))", borderRadius: 12, color: "rgb(var(--color-fg))" }}
+                labelStyle={{ color: "rgb(var(--color-muted))" }}
+                itemStyle={{ color: "rgb(var(--color-fg))" }}
                 formatter={(v: number) => [fmtCurrency(v, currency), "Value"]}
               />
               <Area
                 type="monotone"
                 dataKey="value"
-                stroke="#818cf8"
+                stroke="rgb(var(--color-accent))"
                 strokeWidth={2}
                 fill="url(#valueGradient)"
               />

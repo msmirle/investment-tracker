@@ -10,6 +10,7 @@ import { StatementImport } from "@/components/StatementImport";
 import { AdvisorButton } from "@/components/AdvisorButton";
 import { EditTransactionModal } from "@/components/EditTransactionModal";
 import { PriceOverridesPanel } from "@/components/PriceOverridesPanel";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { PrivacyProvider, PrivacyToggle, usePrivacy } from "@/lib/privacy";
 import type { PortfolioResponse } from "@/lib/types";
 import type { Transaction } from "@/lib/transaction-types";
@@ -187,6 +188,7 @@ function HomeInner() {
           <StatementImport onImported={refresh} />
           <AdvisorButton currency={currency} />
           <PrivacyToggle />
+          <ThemeToggle />
         </div>
       </header>
 

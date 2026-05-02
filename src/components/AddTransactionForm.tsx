@@ -81,7 +81,7 @@ export function AddTransactionForm({ onAdded }: Props) {
     <form onSubmit={submit} className="card space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Add Transaction</h3>
-        <button type="button" className="text-muted hover:text-slate-100 text-sm" onClick={() => setOpen(false)}>
+        <button type="button" className="text-muted hover:text-fg text-sm" onClick={() => setOpen(false)}>
           Close
         </button>
       </div>

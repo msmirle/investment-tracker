@@ -2,20 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------- Theme palettes ---------------------------------------------- */
+/* Values are space-separated RGB triplets so Tailwind's `<alpha-value>`
+   modifier (e.g. `bg-accent/20`) keeps working in both modes. */
+
 :root {
+  color-scheme: light;
+  --color-bg: 248 250 252;        /* slate-50 */
+  --color-fg: 15 23 42;           /* slate-900 */
+  --color-panel: 255 255 255;
+  --color-panel2: 241 245 249;    /* slate-100 */
+  --color-border: 226 232 240;    /* slate-200 */
+  --color-muted: 100 116 139;     /* slate-500 */
+  --color-accent: 79 70 229;      /* indigo-600 */
+  --color-accent2: 8 145 178;     /* cyan-600 */
+  --color-good: 5 150 105;        /* emerald-600 */
+  --color-bad: 220 38 38;         /* red-600 */
+
+  --bg-glow-1: rgba(99, 102, 241, 0.10);
+  --bg-glow-2: rgba(34, 211, 238, 0.08);
+  --shadow-tone: rgba(15, 23, 42, 0.08);
+}
+
+.dark {
   color-scheme: dark;
+  --color-bg: 11 16 32;           /* #0b1020 */
+  --color-fg: 226 232 240;        /* slate-200 */
+  --color-panel: 20 26 47;        /* #141a2f */
+  --color-panel2: 27 35 64;       /* #1b2340 */
+  --color-border: 42 51 90;       /* #2a335a */
+  --color-muted: 148 163 184;     /* slate-400 */
+  --color-accent: 99 102 241;     /* indigo-500 */
+  --color-accent2: 34 211 238;    /* cyan-400 */
+  --color-good: 16 185 129;       /* emerald-500 */
+  --color-bad: 239 68 68;         /* red-500 */
+
+  --bg-glow-1: rgba(99, 102, 241, 0.18);
+  --bg-glow-2: rgba(34, 211, 238, 0.12);
+  --shadow-tone: rgba(0, 0, 0, 0.40);
 }
 
 html, body {
-  background: radial-gradient(1200px 600px at 10% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
-              radial-gradient(1000px 500px at 110% 10%, rgba(34, 211, 238, 0.12), transparent 60%),
-              #0b1020;
-  color: #e2e8f0;
+  background: radial-gradient(1200px 600px at 10% -10%, var(--bg-glow-1), transparent 60%),
+              radial-gradient(1000px 500px at 110% 10%, var(--bg-glow-2), transparent 60%),
+              rgb(var(--color-bg));
+  color: rgb(var(--color-fg));
   min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .card {
-  @apply bg-panel/80 backdrop-blur rounded-2xl border border-border p-5 shadow-xl shadow-black/20;
+  @apply bg-panel/80 backdrop-blur rounded-2xl border border-border p-5 shadow-xl;
+  box-shadow: 0 10px 25px -10px var(--shadow-tone);
 }
 
 .btn {
@@ -26,11 +64,11 @@ html, body {
 
 .btn-ghost {
   @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium
-         bg-panel2 hover:bg-border text-slate-200 transition border border-border;
+         bg-panel2 hover:bg-border text-fg transition border border-border;
 }
 
 .input, .select {
-  @apply w-full bg-panel2 border border-border rounded-lg px-3 py-2 text-sm text-slate-100
+  @apply w-full bg-panel2 border border-border rounded-lg px-3 py-2 text-sm text-fg
          placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/70;
 }
 
