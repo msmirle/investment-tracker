@@ -8,11 +8,11 @@
 
 :root {
   color-scheme: light;
-  --color-bg: 248 250 252;        /* slate-50 */
+  --color-bg: 226 232 240;        /* slate-200 — page backdrop */
   --color-fg: 15 23 42;           /* slate-900 */
-  --color-panel: 255 255 255;
-  --color-panel2: 241 245 249;    /* slate-100 */
-  --color-border: 226 232 240;    /* slate-200 */
+  --color-panel: 241 245 249;     /* slate-100 — cards */
+  --color-panel2: 226 232 240;    /* slate-200 — inputs / table headers */
+  --color-border: 203 213 225;    /* slate-300 */
   --color-muted: 100 116 139;     /* slate-500 */
   --color-accent: 79 70 229;      /* indigo-600 */
   --color-accent2: 8 145 178;     /* cyan-600 */
@@ -21,7 +21,7 @@
 
   --bg-glow-1: rgba(99, 102, 241, 0.10);
   --bg-glow-2: rgba(34, 211, 238, 0.08);
-  --shadow-tone: rgba(15, 23, 42, 0.08);
+  --shadow-tone: rgba(15, 23, 42, 0.10);
 }
 
 .dark {
