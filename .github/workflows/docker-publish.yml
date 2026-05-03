@@ -63,3 +63,15 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy-home:
+    needs: build-and-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, Linux, home-server]
+    timeout-minutes: 15
+    concurrency:
+      group: deploy-home
+      cancel-in-progress: false
+    steps:
+      - name: Pull new image and restart container
+        run: /home/gha-runner/docker/update/update-investment-tracker.sh
