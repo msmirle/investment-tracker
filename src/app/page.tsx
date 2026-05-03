@@ -125,7 +125,7 @@ function HomeInner() {
     >
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-xl font-bold tracking-tight">
             <span className="bg-gradient-to-r from-indigo-400 to-cyan-300 text-transparent bg-clip-text">
               Net Worth Tracker
             </span>
