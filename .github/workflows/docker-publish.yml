@@ -74,4 +74,5 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Pull new image and restart container
-        run: /home/gha-runner/docker/update/update-investment-tracker.sh
+        run: /srv/investment-tracker/update.sh
+        
