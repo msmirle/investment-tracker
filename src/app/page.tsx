@@ -127,7 +127,7 @@ function HomeInner() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
             <span className="bg-gradient-to-r from-indigo-400 to-cyan-300 text-transparent bg-clip-text">
-              Portfolio Tracker
+              Net Worth Tracker
             </span>
           </h1>
           <p className="text-muted text-sm mt-1">

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Portfolio Tracker",
+  title: "Net Worth Tracker",
   description: "Track stocks, ETFs, and crypto with live market values.",
 };
 
