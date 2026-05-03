@@ -78,7 +78,9 @@ export async function POST(req: NextRequest) {
     value: token,
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // Set AUTH_COOKIE_SECURE=true when serving over HTTPS. Defaults to false
+    // so the app works over plain HTTP behind a trusted internal network.
+    secure: process.env.AUTH_COOKIE_SECURE === "true",
     path: "/",
     maxAge: SESSION_TTL_SECONDS,
   });
