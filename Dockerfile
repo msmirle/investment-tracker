@@ -53,11 +53,12 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modul
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 
 COPY --chown=nextjs:nodejs docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY --chown=nextjs:nodejs docker/https-proxy.js /app/docker/https-proxy.js
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Entrypoint starts as root so it can fix bind-mount ownership, then drops
 # to the nextjs user via su-exec before running the app.
-EXPOSE 3000
+EXPOSE 3000 3443
 VOLUME ["/app/data"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \

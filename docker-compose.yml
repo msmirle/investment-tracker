@@ -5,9 +5,18 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+      # Expose HTTPS only when you mount a cert below.
+      - "3443:3443"
     environment:
       # Persistent SQLite path inside the container; the named volume is mounted there.
       DATABASE_URL: "file:/app/data/dev.db"
+      # --- Optional HTTPS (self-signed cert) ---
+      # Uncomment and point these at the files mounted under /certs to enable
+      # HTTPS on port 3443. Required for installing the PWA on Android over LAN.
+      TLS_CERT_FILE: "${TLS_CERT_FILE:-}"
+      TLS_KEY_FILE: "${TLS_KEY_FILE:-}"
+      TLS_CA_FILE: "${TLS_CA_FILE:-}"
+      HTTPS_PORT: "${HTTPS_PORT:-3443}"
       # AI features — set these to enable Statement Analyzer and Advisor.
       AZURE_OPENAI_ENDPOINT: "${AZURE_OPENAI_ENDPOINT:-}"
       AZURE_OPENAI_API_KEY: "${AZURE_OPENAI_API_KEY:-}"
@@ -18,6 +27,10 @@ services:
       OPENAI_MODEL: "${OPENAI_MODEL:-gpt-4o}"
     volumes:
       - investment-tracker-data:/app/data
+      # Mount a host directory containing your self-signed cert + key as read-only.
+      # Then set TLS_CERT_FILE=/certs/fullchain.pem and TLS_KEY_FILE=/certs/privkey.pem
+      # in your .env (or shell environment) before `docker compose up`.
+      - ./certs:/certs:ro
 
 volumes:
   investment-tracker-data:

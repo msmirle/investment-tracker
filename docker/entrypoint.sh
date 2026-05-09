@@ -28,5 +28,19 @@ fi
 echo "[entrypoint] Applying Prisma schema to ${DATABASE_URL}…"
 node /app/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
 
+# Optional HTTPS front-end. Activated when both TLS_CERT_FILE and TLS_KEY_FILE
+# are set and readable. Mount your self-signed cert/key into the container and
+# point these env vars at them (see docker-compose.yml for an example).
+if [ -n "$TLS_CERT_FILE" ] && [ -n "$TLS_KEY_FILE" ]; then
+  if [ -r "$TLS_CERT_FILE" ] && [ -r "$TLS_KEY_FILE" ]; then
+    HTTPS_PORT="${HTTPS_PORT:-3443}"
+    export HTTPS_PORT
+    echo "[entrypoint] Starting HTTPS proxy on :${HTTPS_PORT} (cert=${TLS_CERT_FILE})"
+    node /app/docker/https-proxy.js &
+  else
+    echo "[entrypoint] WARNING: TLS_CERT_FILE or TLS_KEY_FILE not readable; skipping HTTPS"
+  fi
+fi
+
 echo "[entrypoint] Starting Next.js…"
 exec "$@"

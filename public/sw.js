@@ -20,9 +20,11 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Network-only passthrough. Required so the SW counts as "controlling the page"
-// for install criteria, without interfering with auth, API calls, or live data.
+// Network-passthrough fetch handler. We don't cache anything (portfolio data
+// must stay live), but Chrome's PWA install criteria want a SW that actively
+// participates in fetches, so we explicitly respondWith(fetch(...)).
 self.addEventListener("fetch", (event) => {
-  // Let the browser handle the request normally.
-  return;
+  // Only handle GET; let the browser default-handle everything else.
+  if (event.request.method !== "GET") return;
+  event.respondWith(fetch(event.request));
 });
