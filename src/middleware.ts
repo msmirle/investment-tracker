@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AUTH_COOKIE_NAME, verifySession } from "./lib/auth";
 
-const PUBLIC_PATHS = new Set(["/login", "/api/login", "/api/logout"]);
+const PUBLIC_PATHS = new Set([
+  "/login",
+  "/api/login",
+  "/api/logout",
+  "/manifest.webmanifest",
+  "/sw.js",
+]);
 
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_PATHS.has(pathname)) return true;
   if (pathname.startsWith("/_next/")) return true;
+  if (pathname.startsWith("/icons/")) return true;
   if (pathname === "/favicon.ico") return true;
   return false;
 }
