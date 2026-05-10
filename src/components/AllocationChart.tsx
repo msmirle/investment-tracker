@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import type { EvaluatedHolding } from "@/lib/types";
 import { fmtCurrency } from "@/lib/format";
@@ -91,7 +91,27 @@ export function AllocationChart({
   const activeKey =
     selectedSlice && selectedSlice.groupBy === groupBy ? selectedSlice.key : null;
 
+  // Controlled tooltip visibility so we can dismiss the "stuck" tooltip on
+  // touch devices (no mouseleave fires after a tap).
+  const [tooltipActive, setTooltipActive] = useState<boolean | undefined>(undefined);
+  const chartRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function onDocTouch(e: TouchEvent) {
+      const el = chartRef.current;
+      if (!el) return;
+      if (e.target instanceof Node && el.contains(e.target)) return;
+      setTooltipActive(false);
+    }
+    document.addEventListener("touchstart", onDocTouch, { passive: true });
+    return () => document.removeEventListener("touchstart", onDocTouch);
+  }, []);
+
   function handleSliceClick(name: string) {
+    // Hide the tooltip after a tap so it doesn't remain stuck on mobile.
+    setTooltipActive(false);
+    // Re-enable hover-driven tooltip on the next interaction.
+    setTimeout(() => setTooltipActive(undefined), 0);
     if (!onSliceClick) return;
     if (activeKey === name) {
       onSliceClick(null);
@@ -136,7 +156,7 @@ export function AllocationChart({
       {data.length === 0 ? (
         <div className="flex-1 flex items-center justify-center text-muted text-sm">No data yet</div>
       ) : (
-        <div className="flex-1 chart-sensitive">
+        <div className="flex-1 chart-sensitive" ref={chartRef}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -168,6 +188,7 @@ export function AllocationChart({
                 })}
               </Pie>
               <Tooltip
+                {...(tooltipActive === false ? { active: false } : {})}
                 contentStyle={{ background: "rgb(var(--color-panel))", border: "1px solid rgb(var(--color-border))", borderRadius: 12, color: "rgb(var(--color-fg))" }}
                 itemStyle={{ color: "rgb(var(--color-fg))" }}
                 labelStyle={{ color: "rgb(var(--color-fg))" }}
