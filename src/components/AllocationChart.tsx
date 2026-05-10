@@ -9,14 +9,33 @@ const PALETTE = [
   "#ec4899", "#14b8a6", "#eab308", "#3b82f6", "#84cc16", "#f97316",
 ];
 
-type GroupBy = "symbol" | "type" | "firm" | "account";
+export type GroupBy = "symbol" | "type" | "firm" | "account" | "vehicle";
 
 const GROUPS: Array<{ key: GroupBy; label: string }> = [
   { key: "symbol", label: "Symbol" },
   { key: "type", label: "Type" },
   { key: "firm", label: "Firm" },
   { key: "account", label: "Account" },
+  { key: "vehicle", label: "Vehicle" },
 ];
+
+// Registered vehicle / account types we want to surface in the Vehicle view.
+// Matched case-insensitively against the accountNumber (and optionally the
+// account label) since some imports prefix the account number with the
+// vehicle (e.g. "RRSP - 12345") while others store it elsewhere.
+const VEHICLE_TYPES = ["RRSP", "TFSA", "RESP", "LIRA", "SRSP", "RRIF", "RIF", "Margin", "Cash"] as const;
+const VEHICLE_RE = new RegExp(`\\b(${VEHICLE_TYPES.join("|")})\\b`, "i");
+
+export function vehicleOf(accountNumber?: string | null, account?: string | null): string {
+  const probe = `${accountNumber ?? ""} ${account ?? ""}`;
+  const m = probe.match(VEHICLE_RE);
+  if (!m) return "Other";
+  const found = m[1].toUpperCase();
+  if (found === "RIF") return "RRIF";
+  if (found === "MARGIN") return "Margin";
+  if (found === "CASH") return "Cash";
+  return found;
+}
 
 function typeLabel(t: EvaluatedHolding["assetType"]): string {
   if (t === "MUTUAL_FUND") return "MF";
@@ -24,31 +43,44 @@ function typeLabel(t: EvaluatedHolding["assetType"]): string {
   return t;
 }
 
-export function AllocationChart({ holdings, currency }: { holdings: EvaluatedHolding[]; currency: string }) {
-  const [groupBy, setGroupBy] = useState<GroupBy>("symbol");
+export function holdingGroupKey(h: EvaluatedHolding, groupBy: GroupBy): string {
+  if (groupBy === "symbol") return h.symbol;
+  if (groupBy === "type") return typeLabel(h.assetType);
+  if (groupBy === "firm") return h.firm || "Unassigned";
+  if (groupBy === "vehicle") return vehicleOf(h.accountNumber);
+  // account: combine firm + account so identical account numbers
+  // at different firms don't collide.
+  const acct = h.accountNumber?.trim();
+  if (!acct) return "Unassigned";
+  return h.firm ? `${h.firm} · ${acct}` : acct;
+}
+
+export interface SliceSelection {
+  groupBy: GroupBy;
+  key: string;
+}
+
+export function AllocationChart({
+  holdings,
+  currency,
+  selectedSlice,
+  onSliceClick,
+}: {
+  holdings: EvaluatedHolding[];
+  currency: string;
+  selectedSlice?: SliceSelection | null;
+  onSliceClick?: (sel: SliceSelection | null) => void;
+}) {
+  const [groupBy, setGroupBy] = useState<GroupBy>(
+    selectedSlice?.groupBy ?? "symbol",
+  );
 
   const data = useMemo(() => {
     const totals = new Map<string, number>();
     for (const h of holdings) {
       const mv = h.marketValue ?? 0;
       if (mv <= 0) continue;
-      let key: string;
-      if (groupBy === "symbol") {
-        key = h.symbol;
-      } else if (groupBy === "type") {
-        key = typeLabel(h.assetType);
-      } else if (groupBy === "firm") {
-        key = h.firm || "Unassigned";
-      } else {
-        // account: combine firm + account so identical account numbers
-        // at different firms don't collide.
-        const acct = h.accountNumber?.trim();
-        if (!acct) {
-          key = "Unassigned";
-        } else {
-          key = h.firm ? `${h.firm} · ${acct}` : acct;
-        }
-      }
+      const key = holdingGroupKey(h, groupBy);
       totals.set(key, (totals.get(key) ?? 0) + mv);
     }
     return Array.from(totals.entries())
@@ -56,25 +88,49 @@ export function AllocationChart({ holdings, currency }: { holdings: EvaluatedHol
       .sort((a, b) => b.value - a.value);
   }, [holdings, groupBy]);
 
+  const activeKey =
+    selectedSlice && selectedSlice.groupBy === groupBy ? selectedSlice.key : null;
+
+  function handleSliceClick(name: string) {
+    if (!onSliceClick) return;
+    if (activeKey === name) {
+      onSliceClick(null);
+    } else {
+      onSliceClick({ groupBy, key: name });
+    }
+  }
+
   return (
     <div className="card h-[380px] flex flex-col">
       <div className="flex items-center justify-between mb-2 gap-3">
         <h3 className="text-base font-semibold">Allocation</h3>
-        <div className="flex gap-1 bg-panel2 p-1 rounded-lg border border-border">
-          {GROUPS.map((g) => (
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          {activeKey && (
             <button
-              key={g.key}
               type="button"
-              onClick={() => setGroupBy(g.key)}
-              className={`px-2.5 py-1 rounded-md text-xs transition ${
-                groupBy === g.key
-                  ? "bg-accent/20 text-accent"
-                  : "text-muted hover:text-fg"
-              }`}
+              className="px-2 py-1 rounded-md text-xs text-muted hover:text-fg border border-border bg-panel2"
+              onClick={() => onSliceClick?.(null)}
+              title="Clear allocation filter"
             >
-              {g.label}
+              ✕ {activeKey}
             </button>
-          ))}
+          )}
+          <div className="flex gap-1 bg-panel2 p-1 rounded-lg border border-border">
+            {GROUPS.map((g) => (
+              <button
+                key={g.key}
+                type="button"
+                onClick={() => setGroupBy(g.key)}
+                className={`px-2.5 py-1 rounded-md text-xs transition ${
+                  groupBy === g.key
+                    ? "bg-accent/20 text-accent"
+                    : "text-muted hover:text-fg"
+                }`}
+              >
+                {g.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
       {data.length === 0 ? (
@@ -93,10 +149,23 @@ export function AllocationChart({ holdings, currency }: { holdings: EvaluatedHol
                 outerRadius="85%"
                 paddingAngle={2}
                 stroke="none"
+                onClick={(d: { name?: string }) => {
+                  if (d?.name) handleSliceClick(d.name);
+                }}
+                style={onSliceClick ? { cursor: "pointer" } : undefined}
               >
-                {data.map((_, i) => (
-                  <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
-                ))}
+                {data.map((d, i) => {
+                  const dim = activeKey !== null && activeKey !== d.name;
+                  return (
+                    <Cell
+                      key={i}
+                      fill={PALETTE[i % PALETTE.length]}
+                      fillOpacity={dim ? 0.25 : 1}
+                      stroke={activeKey === d.name ? "rgb(var(--color-fg))" : "none"}
+                      strokeWidth={activeKey === d.name ? 2 : 0}
+                    />
+                  );
+                })}
               </Pie>
               <Tooltip
                 contentStyle={{ background: "rgb(var(--color-panel))", border: "1px solid rgb(var(--color-border))", borderRadius: 12, color: "rgb(var(--color-fg))" }}

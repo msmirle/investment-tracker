@@ -4,7 +4,7 @@ import { AddTransactionForm } from "@/components/AddTransactionForm";
 import { PositionsTable } from "@/components/PositionsTable";
 import { TransactionsTable } from "@/components/TransactionsTable";
 import { SummaryCards } from "@/components/SummaryCards";
-import { AllocationChart } from "@/components/AllocationChart";
+import { AllocationChart, holdingGroupKey, vehicleOf, type SliceSelection } from "@/components/AllocationChart";
 import { PerformanceChart } from "@/components/PerformanceChart";
 import { StatementImport } from "@/components/StatementImport";
 import { AdvisorButton } from "@/components/AdvisorButton";
@@ -41,6 +41,7 @@ function HomeInner() {
   const [currency, setCurrency] = useState("CAD");
   const [selectedFirms, setSelectedFirms] = useState<string[]>([]);
   const [selectedPositionId, setSelectedPositionId] = useState<string | null>(null);
+  const [selectedSlice, setSelectedSlice] = useState<SliceSelection | null>(null);
   const [data, setData] = useState<PortfolioResponse | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
@@ -104,10 +105,35 @@ function HomeInner() {
   const selectedPosition = selectedPositionId
     ? allPositions.find((h) => h.id === selectedPositionId) ?? null
     : null;
-  const visiblePositions = selectedPosition ? [selectedPosition] : allPositions;
+
+  // Positions filtered by an active allocation-chart slice (firm/account/
+  // type/vehicle/symbol). Applied before the row-level position filter.
+  const slicedPositions = selectedSlice
+    ? allPositions.filter(
+        (h) => holdingGroupKey(h, selectedSlice.groupBy) === selectedSlice.key,
+      )
+    : allPositions;
+  const visiblePositions = selectedPosition ? [selectedPosition] : slicedPositions;
   const firms = Array.from(new Set(transactions.map((t) => t.firm).filter(Boolean) as string[])).sort();
+
+  function txMatchesSlice(t: Transaction, sel: SliceSelection): boolean {
+    if (sel.groupBy === "symbol") return t.symbol === sel.key;
+    if (sel.groupBy === "firm") return (t.firm || "Unassigned") === sel.key;
+    if (sel.groupBy === "vehicle") return vehicleOf(t.accountNumber, t.account) === sel.key;
+    if (sel.groupBy === "type") {
+      const u = t.assetType.toUpperCase();
+      const label = u === "MUTUAL_FUND" ? "MF" : u === "PRIVATE_EQUITY" ? "PE" : u;
+      return label === sel.key;
+    }
+    // account
+    const acct = t.accountNumber?.trim();
+    const key = !acct ? "Unassigned" : t.firm ? `${t.firm} · ${acct}` : acct;
+    return key === sel.key;
+  }
+
   const visibleTransactions = transactions.filter((t) => {
     if (selectedFirms.length > 0 && (!t.firm || !selectedFirms.includes(t.firm))) return false;
+    if (selectedSlice && !txMatchesSlice(t, selectedSlice)) return false;
     if (selectedPosition) {
       if (t.symbol !== selectedPosition.symbol) return false;
       if ((t.firm ?? null) !== (selectedPosition.firm ?? null)) return false;
@@ -210,7 +236,12 @@ function HomeInner() {
           accountNumber={selectedPosition?.accountNumber ?? undefined}
           refreshKey={refreshKey}
         />
-        <AllocationChart holdings={visiblePositions} currency={currency} />
+        <AllocationChart
+          holdings={selectedPosition ? [selectedPosition] : allPositions}
+          currency={currency}
+          selectedSlice={selectedSlice}
+          onSliceClick={setSelectedSlice}
+        />
       </div>
 
       <section className="space-y-3">
@@ -226,7 +257,7 @@ function HomeInner() {
           </div>
         </div>
         <PositionsTable
-          positions={allPositions}
+          positions={slicedPositions}
           currency={currency}
           selectedId={selectedPositionId}
           onSelect={setSelectedPositionId}
