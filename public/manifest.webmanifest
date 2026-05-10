@@ -1,8 +1,9 @@
 {
+  "id": "/?app=networth-tracker",
   "name": "Net Worth Tracker",
   "short_name": "Net Worth",
   "description": "Track stocks, ETFs, and crypto with live market values.",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

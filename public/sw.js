@@ -2,7 +2,8 @@
 // We intentionally do NOT cache API responses or HTML to keep portfolio data fresh.
 // Static assets under /_next/static are already content-hashed and cached by the browser.
 
-const VERSION = "v1";
+// Bump when manifest identity changes so old installs cleanly re-activate.
+const VERSION = "networth-v2";
 
 self.addEventListener("install", (event) => {
   // Activate immediately on first install / update.
