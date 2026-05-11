@@ -247,6 +247,10 @@ export function AllocationChart({
               title="Clear allocation filter"
             >
               ✕ {activeKey}
+              {(() => {
+                const sel = data.find((d) => d.name === activeKey);
+                return sel ? ` · ${fmtCurrency(sel.value, currency)}` : "";
+              })()}
             </button>
           )}
           <div className="flex gap-1 bg-panel2 p-1 rounded-lg border border-border">
@@ -301,13 +305,15 @@ export function AllocationChart({
                   );
                 })}
               </Pie>
-              <Tooltip
-                wrapperStyle={{ pointerEvents: "none" }}
-                contentStyle={{ background: "rgb(var(--color-panel))", border: "1px solid rgb(var(--color-border))", borderRadius: 12, color: "rgb(var(--color-fg))" }}
-                itemStyle={{ color: "rgb(var(--color-fg))" }}
-                labelStyle={{ color: "rgb(var(--color-fg))" }}
-                formatter={(v: number) => fmtCurrency(v, currency)}
-              />
+              {!isTouchDevice && (
+                <Tooltip
+                  wrapperStyle={{ pointerEvents: "none" }}
+                  contentStyle={{ background: "rgb(var(--color-panel))", border: "1px solid rgb(var(--color-border))", borderRadius: 12, color: "rgb(var(--color-fg))" }}
+                  itemStyle={{ color: "rgb(var(--color-fg))" }}
+                  labelStyle={{ color: "rgb(var(--color-fg))" }}
+                  formatter={(v: number) => fmtCurrency(v, currency)}
+                />
+              )}
               <Legend
                 iconType="circle"
                 wrapperStyle={{ fontSize: 12, color: "#e2e8f0" }}
