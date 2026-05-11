@@ -91,16 +91,22 @@ export function AllocationChart({
   const activeKey =
     selectedSlice && selectedSlice.groupBy === groupBy ? selectedSlice.key : null;
 
-  // Detect coarse pointers (touch) so we drive the tooltip ourselves —
-  // recharts' default behaviour leaves the first tapped tooltip pinned and
-  // then the overlay intercepts subsequent taps, so onClick never fires for
-  // the next slice.
+  // Detect coarse pointers (touch). On touch, recharts' tooltip stays pinned
+  // after a tap (no mouseleave is ever fired) and the next tap on a
+  // different slice often doesn't fire onClick because recharts thinks the
+  // first slice is still active. We work around it with a document-level
+  // capture-phase touchstart listener that:
+  //   1. geometrically picks the slice from the touch coordinates, and
+  //   2. dispatches synthetic mouse/pointer-leave events at the SVG to
+  //      reset recharts' internal active state on every tap inside the chart
+  //      (this is the same reset that "tap on a blank area" achieves
+  //      manually).
   const [isTouchDevice, setIsTouchDevice] = useState(false);
-  // For touch devices, the slice currently shown in the tooltip.
-  const [touchTip, setTouchTip] = useState<
-    { name: string; value: number; color: string } | null
-  >(null);
   const chartRef = useRef<HTMLDivElement | null>(null);
+  const dataRef = useRef(data);
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -111,115 +117,7 @@ export function AllocationChart({
     return () => mq.removeEventListener?.("change", update);
   }, []);
 
-  // Reset the pinned tooltip when the group/data changes.
-  useEffect(() => {
-    setTouchTip(null);
-  }, [groupBy]);
-
-  useEffect(() => {
-    if (!isTouchDevice) return;
-    const el = chartRef.current;
-    function onDocTouch(e: TouchEvent) {
-      if (!el) return;
-      if (e.target instanceof Node && el.contains(e.target)) return;
-      setTouchTip(null);
-    }
-    document.addEventListener("touchstart", onDocTouch, { passive: true });
-    return () => document.removeEventListener("touchstart", onDocTouch);
-  }, [isTouchDevice]);
-
-  // On touch, recharts gets confused after the first tap: subsequent taps on
-  // a different slice often don't fire onClick / onMouseEnter (it thinks the
-  // first slice is still "active"), and its active-shape overlay can sit on
-  // top of the original .recharts-sector path so `target.closest` misses it.
-  // Bypass all of that by computing the tapped slice geometrically from the
-  // touch coordinates.
-  useEffect(() => {
-    if (!isTouchDevice) return;
-    const el = chartRef.current;
-    if (!el) return;
-
-    function pickSliceFromPoint(clientX: number, clientY: number): number {
-      const host = chartRef.current;
-      if (!host) return -1;
-      const svg = host.querySelector("svg.recharts-surface") as SVGSVGElement | null;
-      if (!svg) return -1;
-      const rect = svg.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const dx = clientX - cx;
-      const dy = clientY - cy;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      // Pie outerRadius is 85% of min(width, height)/2; innerRadius 55%.
-      const radius = Math.min(rect.width, rect.height) / 2;
-      const inner = radius * 0.55;
-      const outer = radius * 0.85;
-      // Allow generous touch slop on either side of the ring.
-      if (dist < inner * 0.7 || dist > outer * 1.2) return -1;
-
-      const items = dataRef.current;
-      const total = items.reduce((s, d) => s + d.value, 0);
-      if (total <= 0) return -1;
-
-      // Recharts Pie default: starts at 90° (top), sweeps clockwise.
-      // Convert atan2 (mathematical, ccw from +x) to recharts angle.
-      let angle = Math.atan2(-dy, dx) * (180 / Math.PI); // -180..180, 0=right, 90=up
-      // Recharts startAngle=90, endAngle=-270 (i.e. clockwise sweep).
-      // Slice i occupies [90 - cumPctBefore*360, 90 - cumPct*360].
-      // Compute the angular position of the tapped point relative to start.
-      let sweep = 90 - angle; // degrees clockwise from 12 o'clock
-      sweep = ((sweep % 360) + 360) % 360; // 0..360
-      let cum = 0;
-      for (let i = 0; i < items.length; i++) {
-        const slicePct = items[i].value / total;
-        const next = cum + slicePct * 360;
-        if (sweep >= cum && sweep < next) return i;
-        cum = next;
-      }
-      return -1;
-    }
-
-    function onTouchStart(e: TouchEvent) {
-      if (e.touches.length !== 1) return;
-      const t = e.touches[0];
-      const idx = pickSliceFromPoint(t.clientX, t.clientY);
-      if (idx < 0) return;
-      const d = dataRef.current[idx];
-      if (!d) return;
-      e.stopPropagation();
-      // Don't preventDefault — we still want scrolling outside the ring.
-      handleSliceClickRef.current(d.name, idx);
-    }
-
-    el.addEventListener("touchstart", onTouchStart, { passive: false, capture: true });
-    return () => el.removeEventListener("touchstart", onTouchStart, true);
-  }, [isTouchDevice]);
-
-  // Refs so the capture-phase listener always sees the latest data/handler
-  // without re-binding on every render.
-  const dataRef = useRef(data);
-  useEffect(() => {
-    dataRef.current = data;
-  }, [data]);
-
-  function setTipForIndex(name: string, index: number) {
-    if (index < 0 || index >= data.length) return;
-    const d = data[index];
-    setTouchTip({
-      name: d.name,
-      value: d.value,
-      color: PALETTE[index % PALETTE.length],
-    });
-  }
-
-  function handleSliceClick(name: string, index: number) {
-    if (isTouchDevice) {
-      if (touchTip && touchTip.name === name) {
-        setTouchTip(null);
-      } else {
-        setTipForIndex(name, index);
-      }
-    }
+  function handleSliceClick(name: string) {
     if (!onSliceClick) return;
     if (activeKey === name) {
       onSliceClick(null);
@@ -232,6 +130,109 @@ export function AllocationChart({
   useEffect(() => {
     handleSliceClickRef.current = handleSliceClick;
   });
+
+  useEffect(() => {
+    if (!isTouchDevice) return;
+
+    function resetRechartsActiveState() {
+      const host = chartRef.current;
+      if (!host) return;
+      const svg = host.querySelector(
+        "svg.recharts-surface",
+      ) as SVGSVGElement | null;
+      if (!svg) return;
+      const rect = svg.getBoundingClientRect();
+      const init: MouseEventInit = {
+        clientX: rect.left - 1000,
+        clientY: rect.top - 1000,
+        bubbles: true,
+        cancelable: true,
+      };
+      try {
+        svg.dispatchEvent(new MouseEvent("mousemove", init));
+        svg.dispatchEvent(new MouseEvent("mouseout", init));
+        svg.dispatchEvent(new MouseEvent("mouseleave", init));
+        if (typeof PointerEvent !== "undefined") {
+          svg.dispatchEvent(new PointerEvent("pointermove", init));
+          svg.dispatchEvent(new PointerEvent("pointerout", init));
+          svg.dispatchEvent(new PointerEvent("pointerleave", init));
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+
+    function pickSliceFromPoint(
+      clientX: number,
+      clientY: number,
+    ): { idx: number; insideChart: boolean } {
+      const host = chartRef.current;
+      if (!host) return { idx: -1, insideChart: false };
+      const hostRect = host.getBoundingClientRect();
+      const insideChart =
+        clientX >= hostRect.left &&
+        clientX <= hostRect.right &&
+        clientY >= hostRect.top &&
+        clientY <= hostRect.bottom;
+      if (!insideChart) return { idx: -1, insideChart };
+
+      const svg = host.querySelector(
+        "svg.recharts-surface",
+      ) as SVGSVGElement | null;
+      if (!svg) return { idx: -1, insideChart };
+      const rect = svg.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = clientX - cx;
+      const dy = clientY - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const radius = Math.min(rect.width, rect.height) / 2;
+      const inner = radius * 0.55;
+      const outer = radius * 0.85;
+      if (dist < inner * 0.7 || dist > outer * 1.2)
+        return { idx: -1, insideChart };
+
+      const items = dataRef.current;
+      const total = items.reduce((s, d) => s + d.value, 0);
+      if (total <= 0) return { idx: -1, insideChart };
+
+      // Recharts Pie default: starts at 12 o'clock, sweeps clockwise.
+      const angle = Math.atan2(-dy, dx) * (180 / Math.PI); // 0=right, 90=up
+      let sweep = 90 - angle; // degrees clockwise from 12 o'clock
+      sweep = ((sweep % 360) + 360) % 360;
+      let cum = 0;
+      for (let i = 0; i < items.length; i++) {
+        const next = cum + (items[i].value / total) * 360;
+        if (sweep >= cum && sweep < next) return { idx: i, insideChart };
+        cum = next;
+      }
+      return { idx: -1, insideChart };
+    }
+
+    function onTouchStart(e: TouchEvent) {
+      if (e.touches.length !== 1) return;
+      const t = e.touches[0];
+      const { idx, insideChart } = pickSliceFromPoint(t.clientX, t.clientY);
+      if (!insideChart) return;
+      // Always clear recharts' internal active state on any tap inside the
+      // chart — this is what "tap a blank area" was doing manually.
+      resetRechartsActiveState();
+      if (idx < 0) return;
+      const d = dataRef.current[idx];
+      if (!d) return;
+      handleSliceClickRef.current(d.name);
+      // After the React state update, reset again on the next frame in case
+      // recharts re-pinned itself in response to its own touch handling.
+      requestAnimationFrame(resetRechartsActiveState);
+    }
+
+    document.addEventListener("touchstart", onTouchStart, {
+      passive: true,
+      capture: true,
+    });
+    return () =>
+      document.removeEventListener("touchstart", onTouchStart, true);
+  }, [isTouchDevice]);
 
   return (
     <div className="card h-[380px] flex flex-col">
@@ -246,10 +247,6 @@ export function AllocationChart({
               title="Clear allocation filter"
             >
               ✕ {activeKey}
-              {(() => {
-                const sel = data.find((d) => d.name === activeKey);
-                return sel ? ` · ${fmtCurrency(sel.value, currency)}` : "";
-              })()}
             </button>
           )}
           <div className="flex gap-1 bg-panel2 p-1 rounded-lg border border-border">
@@ -286,10 +283,8 @@ export function AllocationChart({
                 outerRadius="85%"
                 paddingAngle={2}
                 stroke="none"
-                onClick={(d: { name?: string }, i: number) => {
-                  // On touch, the capture-phase listener handles this and
-                  // stops propagation, so this only runs for mouse clicks.
-                  if (d?.name) handleSliceClick(d.name, i);
+                onClick={(d: { name?: string }) => {
+                  if (d?.name) handleSliceClick(d.name);
                 }}
                 style={onSliceClick ? { cursor: "pointer" } : undefined}
               >
@@ -307,25 +302,6 @@ export function AllocationChart({
                 })}
               </Pie>
               <Tooltip
-                {...(isTouchDevice
-                  ? touchTip
-                    ? {
-                        active: true,
-                        payload: [
-                          {
-                            name: touchTip.name,
-                            value: touchTip.value,
-                            color: touchTip.color,
-                            dataKey: "value",
-                            payload: {
-                              name: touchTip.name,
-                              value: touchTip.value,
-                            },
-                          },
-                        ],
-                      }
-                    : { active: false }
-                  : {})}
                 wrapperStyle={{ pointerEvents: "none" }}
                 contentStyle={{ background: "rgb(var(--color-panel))", border: "1px solid rgb(var(--color-border))", borderRadius: 12, color: "rgb(var(--color-fg))" }}
                 itemStyle={{ color: "rgb(var(--color-fg))" }}
