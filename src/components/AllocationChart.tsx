@@ -210,6 +210,10 @@ export function AllocationChart({
               title="Clear allocation filter"
             >
               ✕ {activeKey}
+              {(() => {
+                const sel = data.find((d) => d.name === activeKey);
+                return sel ? ` · ${fmtCurrency(sel.value, currency)}` : "";
+              })()}
             </button>
           )}
           <div className="flex gap-1 bg-panel2 p-1 rounded-lg border border-border">
