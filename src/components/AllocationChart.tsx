@@ -128,6 +128,44 @@ export function AllocationChart({
     return () => document.removeEventListener("touchstart", onDocTouch);
   }, [isTouchDevice]);
 
+  // On touch, recharts gets confused after the first tap: subsequent taps on
+  // a different slice often don't fire onClick / onMouseEnter (it thinks the
+  // first slice is still "active"). Bypass that by reading the tapped slice
+  // straight from the SVG via a capture-phase click listener.
+  useEffect(() => {
+    if (!isTouchDevice) return;
+    const el = chartRef.current;
+    if (!el) return;
+
+    function onClickCapture(e: MouseEvent) {
+      const target = e.target as Element | null;
+      if (!target) return;
+      const sector = target.closest?.(".recharts-sector") as Element | null;
+      if (!sector) return;
+      const parent = sector.parentElement;
+      if (!parent) return;
+      const sectors = Array.from(
+        parent.querySelectorAll(":scope > .recharts-sector"),
+      );
+      const idx = sectors.indexOf(sector);
+      if (idx < 0 || idx >= dataRef.current.length) return;
+      const d = dataRef.current[idx];
+      e.stopPropagation();
+      e.preventDefault();
+      handleSliceClickRef.current(d.name, idx);
+    }
+
+    el.addEventListener("click", onClickCapture, true);
+    return () => el.removeEventListener("click", onClickCapture, true);
+  }, [isTouchDevice]);
+
+  // Refs so the capture-phase listener always sees the latest data/handler
+  // without re-binding on every render.
+  const dataRef = useRef(data);
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+
   function setTipForIndex(name: string, index: number) {
     if (index < 0 || index >= data.length) return;
     const d = data[index];
@@ -153,6 +191,11 @@ export function AllocationChart({
       onSliceClick({ groupBy, key: name });
     }
   }
+
+  const handleSliceClickRef = useRef(handleSliceClick);
+  useEffect(() => {
+    handleSliceClickRef.current = handleSliceClick;
+  });
 
   return (
     <div className="card h-[380px] flex flex-col">
@@ -204,14 +247,9 @@ export function AllocationChart({
                 paddingAngle={2}
                 stroke="none"
                 onClick={(d: { name?: string }, i: number) => {
+                  // On touch, the capture-phase listener handles this and
+                  // stops propagation, so this only runs for mouse clicks.
                   if (d?.name) handleSliceClick(d.name, i);
-                }}
-                onMouseEnter={(d: { name?: string }, i: number) => {
-                  // On touch devices, this is our most reliable signal that
-                  // a new slice was tapped (the synthesized mouseenter still
-                  // fires even when the tooltip overlay would otherwise eat
-                  // the click).
-                  if (isTouchDevice && d?.name) setTipForIndex(d.name, i);
                 }}
                 style={onSliceClick ? { cursor: "pointer" } : undefined}
               >
