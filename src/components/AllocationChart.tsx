@@ -91,60 +91,61 @@ export function AllocationChart({
   const activeKey =
     selectedSlice && selectedSlice.groupBy === groupBy ? selectedSlice.key : null;
 
-  // Controlled tooltip visibility so we can dismiss the "stuck" tooltip on
-  // touch devices (no mouseleave fires after a tap).
-  const [tooltipActive, setTooltipActive] = useState<boolean | undefined>(undefined);
-  // For touch devices, drive the tooltip content explicitly so tapping a new
-  // slice updates the label (recharts won't fire mouseenter on touch).
+  // Detect coarse pointers (touch) so we drive the tooltip ourselves —
+  // recharts' default behaviour leaves the first tapped tooltip pinned and
+  // then the overlay intercepts subsequent taps, so onClick never fires for
+  // the next slice.
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  // For touch devices, the slice currently shown in the tooltip.
   const [touchTip, setTouchTip] = useState<
     { name: string; value: number; color: string } | null
   >(null);
   const chartRef = useRef<HTMLDivElement | null>(null);
-  const lastTouchRef = useRef<number>(0);
 
-  // Reset the pinned touch tooltip when the group/data changes.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(hover: none), (pointer: coarse)");
+    const update = () => setIsTouchDevice(mq.matches);
+    update();
+    mq.addEventListener?.("change", update);
+    return () => mq.removeEventListener?.("change", update);
+  }, []);
+
+  // Reset the pinned tooltip when the group/data changes.
   useEffect(() => {
     setTouchTip(null);
   }, [groupBy]);
 
   useEffect(() => {
+    if (!isTouchDevice) return;
     const el = chartRef.current;
     function onDocTouch(e: TouchEvent) {
       if (!el) return;
-      if (e.target instanceof Node && el.contains(e.target)) {
-        lastTouchRef.current = Date.now();
-        return;
-      }
-      setTooltipActive(false);
+      if (e.target instanceof Node && el.contains(e.target)) return;
       setTouchTip(null);
     }
     document.addEventListener("touchstart", onDocTouch, { passive: true });
     return () => document.removeEventListener("touchstart", onDocTouch);
-  }, []);
+  }, [isTouchDevice]);
+
+  function setTipForIndex(name: string, index: number) {
+    if (index < 0 || index >= data.length) return;
+    const d = data[index];
+    setTouchTip({
+      name: d.name,
+      value: d.value,
+      color: PALETTE[index % PALETTE.length],
+    });
+  }
 
   function handleSliceClick(name: string, index: number) {
-    const isTouch = Date.now() - lastTouchRef.current < 600;
-    // Hide the tooltip after a tap so it doesn't remain stuck on mobile.
-    setTooltipActive(false);
-    // Re-enable hover-driven tooltip on the next interaction.
-    setTimeout(() => setTooltipActive(undefined), 0);
-
-    if (isTouch && index >= 0 && index < data.length) {
-      const d = data[index];
-      // Toggle off if tapping the same slice that's already pinned.
+    if (isTouchDevice) {
       if (touchTip && touchTip.name === name) {
         setTouchTip(null);
       } else {
-        setTouchTip({
-          name: d.name,
-          value: d.value,
-          color: PALETTE[index % PALETTE.length],
-        });
+        setTipForIndex(name, index);
       }
-    } else {
-      setTouchTip(null);
     }
-
     if (!onSliceClick) return;
     if (activeKey === name) {
       onSliceClick(null);
@@ -205,6 +206,13 @@ export function AllocationChart({
                 onClick={(d: { name?: string }, i: number) => {
                   if (d?.name) handleSliceClick(d.name, i);
                 }}
+                onMouseEnter={(d: { name?: string }, i: number) => {
+                  // On touch devices, this is our most reliable signal that
+                  // a new slice was tapped (the synthesized mouseenter still
+                  // fires even when the tooltip overlay would otherwise eat
+                  // the click).
+                  if (isTouchDevice && d?.name) setTipForIndex(d.name, i);
+                }}
                 style={onSliceClick ? { cursor: "pointer" } : undefined}
               >
                 {data.map((d, i) => {
@@ -221,22 +229,26 @@ export function AllocationChart({
                 })}
               </Pie>
               <Tooltip
-                {...(touchTip
-                  ? {
-                      active: true,
-                      payload: [
-                        {
-                          name: touchTip.name,
-                          value: touchTip.value,
-                          color: touchTip.color,
-                          dataKey: "value",
-                          payload: { name: touchTip.name, value: touchTip.value },
-                        },
-                      ],
-                    }
-                  : tooltipActive === false
-                    ? { active: false }
-                    : {})}
+                {...(isTouchDevice
+                  ? touchTip
+                    ? {
+                        active: true,
+                        payload: [
+                          {
+                            name: touchTip.name,
+                            value: touchTip.value,
+                            color: touchTip.color,
+                            dataKey: "value",
+                            payload: {
+                              name: touchTip.name,
+                              value: touchTip.value,
+                            },
+                          },
+                        ],
+                      }
+                    : { active: false }
+                  : {})}
+                wrapperStyle={{ pointerEvents: "none" }}
                 contentStyle={{ background: "rgb(var(--color-panel))", border: "1px solid rgb(var(--color-border))", borderRadius: 12, color: "rgb(var(--color-fg))" }}
                 itemStyle={{ color: "rgb(var(--color-fg))" }}
                 labelStyle={{ color: "rgb(var(--color-fg))" }}
