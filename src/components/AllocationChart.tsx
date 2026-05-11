@@ -130,33 +130,69 @@ export function AllocationChart({
 
   // On touch, recharts gets confused after the first tap: subsequent taps on
   // a different slice often don't fire onClick / onMouseEnter (it thinks the
-  // first slice is still "active"). Bypass that by reading the tapped slice
-  // straight from the SVG via a capture-phase click listener.
+  // first slice is still "active"), and its active-shape overlay can sit on
+  // top of the original .recharts-sector path so `target.closest` misses it.
+  // Bypass all of that by computing the tapped slice geometrically from the
+  // touch coordinates.
   useEffect(() => {
     if (!isTouchDevice) return;
     const el = chartRef.current;
     if (!el) return;
 
-    function onClickCapture(e: MouseEvent) {
-      const target = e.target as Element | null;
-      if (!target) return;
-      const sector = target.closest?.(".recharts-sector") as Element | null;
-      if (!sector) return;
-      const parent = sector.parentElement;
-      if (!parent) return;
-      const sectors = Array.from(
-        parent.querySelectorAll(":scope > .recharts-sector"),
-      );
-      const idx = sectors.indexOf(sector);
-      if (idx < 0 || idx >= dataRef.current.length) return;
+    function pickSliceFromPoint(clientX: number, clientY: number): number {
+      const host = chartRef.current;
+      if (!host) return -1;
+      const svg = host.querySelector("svg.recharts-surface") as SVGSVGElement | null;
+      if (!svg) return -1;
+      const rect = svg.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = clientX - cx;
+      const dy = clientY - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      // Pie outerRadius is 85% of min(width, height)/2; innerRadius 55%.
+      const radius = Math.min(rect.width, rect.height) / 2;
+      const inner = radius * 0.55;
+      const outer = radius * 0.85;
+      // Allow generous touch slop on either side of the ring.
+      if (dist < inner * 0.7 || dist > outer * 1.2) return -1;
+
+      const items = dataRef.current;
+      const total = items.reduce((s, d) => s + d.value, 0);
+      if (total <= 0) return -1;
+
+      // Recharts Pie default: starts at 90° (top), sweeps clockwise.
+      // Convert atan2 (mathematical, ccw from +x) to recharts angle.
+      let angle = Math.atan2(-dy, dx) * (180 / Math.PI); // -180..180, 0=right, 90=up
+      // Recharts startAngle=90, endAngle=-270 (i.e. clockwise sweep).
+      // Slice i occupies [90 - cumPctBefore*360, 90 - cumPct*360].
+      // Compute the angular position of the tapped point relative to start.
+      let sweep = 90 - angle; // degrees clockwise from 12 o'clock
+      sweep = ((sweep % 360) + 360) % 360; // 0..360
+      let cum = 0;
+      for (let i = 0; i < items.length; i++) {
+        const slicePct = items[i].value / total;
+        const next = cum + slicePct * 360;
+        if (sweep >= cum && sweep < next) return i;
+        cum = next;
+      }
+      return -1;
+    }
+
+    function onTouchStart(e: TouchEvent) {
+      if (e.touches.length !== 1) return;
+      const t = e.touches[0];
+      const idx = pickSliceFromPoint(t.clientX, t.clientY);
+      if (idx < 0) return;
       const d = dataRef.current[idx];
+      if (!d) return;
       e.stopPropagation();
-      e.preventDefault();
+      // Don't preventDefault — we still want scrolling outside the ring.
       handleSliceClickRef.current(d.name, idx);
     }
 
-    el.addEventListener("click", onClickCapture, true);
-    return () => el.removeEventListener("click", onClickCapture, true);
+    el.addEventListener("touchstart", onTouchStart, { passive: false, capture: true });
+    return () => el.removeEventListener("touchstart", onTouchStart, true);
   }, [isTouchDevice]);
 
   // Refs so the capture-phase listener always sees the latest data/handler
