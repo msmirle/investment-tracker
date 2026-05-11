@@ -94,24 +94,57 @@ export function AllocationChart({
   // Controlled tooltip visibility so we can dismiss the "stuck" tooltip on
   // touch devices (no mouseleave fires after a tap).
   const [tooltipActive, setTooltipActive] = useState<boolean | undefined>(undefined);
+  // For touch devices, drive the tooltip content explicitly so tapping a new
+  // slice updates the label (recharts won't fire mouseenter on touch).
+  const [touchTip, setTouchTip] = useState<
+    { name: string; value: number; color: string } | null
+  >(null);
   const chartRef = useRef<HTMLDivElement | null>(null);
+  const lastTouchRef = useRef<number>(0);
+
+  // Reset the pinned touch tooltip when the group/data changes.
+  useEffect(() => {
+    setTouchTip(null);
+  }, [groupBy]);
 
   useEffect(() => {
+    const el = chartRef.current;
     function onDocTouch(e: TouchEvent) {
-      const el = chartRef.current;
       if (!el) return;
-      if (e.target instanceof Node && el.contains(e.target)) return;
+      if (e.target instanceof Node && el.contains(e.target)) {
+        lastTouchRef.current = Date.now();
+        return;
+      }
       setTooltipActive(false);
+      setTouchTip(null);
     }
     document.addEventListener("touchstart", onDocTouch, { passive: true });
     return () => document.removeEventListener("touchstart", onDocTouch);
   }, []);
 
-  function handleSliceClick(name: string) {
+  function handleSliceClick(name: string, index: number) {
+    const isTouch = Date.now() - lastTouchRef.current < 600;
     // Hide the tooltip after a tap so it doesn't remain stuck on mobile.
     setTooltipActive(false);
     // Re-enable hover-driven tooltip on the next interaction.
     setTimeout(() => setTooltipActive(undefined), 0);
+
+    if (isTouch && index >= 0 && index < data.length) {
+      const d = data[index];
+      // Toggle off if tapping the same slice that's already pinned.
+      if (touchTip && touchTip.name === name) {
+        setTouchTip(null);
+      } else {
+        setTouchTip({
+          name: d.name,
+          value: d.value,
+          color: PALETTE[index % PALETTE.length],
+        });
+      }
+    } else {
+      setTouchTip(null);
+    }
+
     if (!onSliceClick) return;
     if (activeKey === name) {
       onSliceClick(null);
@@ -169,8 +202,8 @@ export function AllocationChart({
                 outerRadius="85%"
                 paddingAngle={2}
                 stroke="none"
-                onClick={(d: { name?: string }) => {
-                  if (d?.name) handleSliceClick(d.name);
+                onClick={(d: { name?: string }, i: number) => {
+                  if (d?.name) handleSliceClick(d.name, i);
                 }}
                 style={onSliceClick ? { cursor: "pointer" } : undefined}
               >
@@ -188,7 +221,22 @@ export function AllocationChart({
                 })}
               </Pie>
               <Tooltip
-                {...(tooltipActive === false ? { active: false } : {})}
+                {...(touchTip
+                  ? {
+                      active: true,
+                      payload: [
+                        {
+                          name: touchTip.name,
+                          value: touchTip.value,
+                          color: touchTip.color,
+                          dataKey: "value",
+                          payload: { name: touchTip.name, value: touchTip.value },
+                        },
+                      ],
+                    }
+                  : tooltipActive === false
+                    ? { active: false }
+                    : {})}
                 contentStyle={{ background: "rgb(var(--color-panel))", border: "1px solid rgb(var(--color-border))", borderRadius: 12, color: "rgb(var(--color-fg))" }}
                 itemStyle={{ color: "rgb(var(--color-fg))" }}
                 labelStyle={{ color: "rgb(var(--color-fg))" }}
