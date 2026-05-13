@@ -158,7 +158,7 @@ function HomeInner() {
             </span>
           </h1>
           <p className="text-muted text-sm mt-1">
-            Stocks · ETFs · Crypto · Live market values
+            Stocks · ETFs · Crypto · Live Market Values
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
