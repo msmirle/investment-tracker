@@ -53,7 +53,7 @@ See [`sample-holdings.csv`](sample-holdings.csv) for an example.
 A multi-arch image (linux/amd64 + linux/arm64) is published to GitHub Container Registry on every push to `main`:
 
 ```
-ghcr.io/spazshark/investment-tracker:latest
+ghcr.io/msmirle/investment-tracker:latest
 ```
 
 ### One-liner
@@ -68,7 +68,7 @@ docker run -d \
   -e AZURE_OPENAI_DEPLOYMENT="gpt-4o" \
   -e AZURE_OPENAI_API_VERSION="2025-03-01-preview" \
   --restart unless-stopped \
-  ghcr.io/spazshark/investment-tracker:latest
+  ghcr.io/msmirle/investment-tracker:latest
 ```
 
 The SQLite database lives on the named volume `investment-tracker-data` (mounted at `/app/data` inside the container) so it survives container upgrades. AI features (Statement Analyzer, Advisor) are optional — omit the env vars to disable them.

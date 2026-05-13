@@ -1,6 +1,6 @@
 services:
   app:
-    image: ghcr.io/spazshark/investment-tracker:latest
+    image: ghcr.io/msmirle/investment-tracker:latest
     container_name: investment-tracker
     restart: unless-stopped
     ports:
