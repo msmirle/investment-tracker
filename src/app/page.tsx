@@ -48,6 +48,7 @@ function HomeInner() {
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [editing, setEditing] = useState<Transaction | null>(null);
+  const [duplicating, setDuplicating] = useState<Transaction | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [, setNowTick] = useState(0);
 
@@ -276,10 +277,15 @@ function HomeInner() {
             {visibleTransactions.length} shown · {transactions.length} total
           </span>
         </div>
-        <AddTransactionForm onAdded={refresh} />
+        <AddTransactionForm
+          onAdded={refresh}
+          prefill={duplicating}
+          onPrefillConsumed={() => setDuplicating(null)}
+        />
         <TransactionsTable
           transactions={visibleTransactions}
           onEdit={setEditing}
+          onDuplicate={(t) => setDuplicating(t)}
           onDelete={handleDeleteTx}
         />
       </section>

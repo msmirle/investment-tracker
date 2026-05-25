@@ -1,14 +1,23 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { Transaction } from "@/lib/transaction-types";
 
 interface Props {
   onAdded: () => void;
+  prefill?: Transaction | null;
+  onPrefillConsumed?: () => void;
 }
 
 const CURRENCIES = ["USD", "CAD"];
 const ORDER_TYPES = ["MARKET", "LIMIT", "STOP", "STOP_LIMIT", "GTC"];
 
-export function AddTransactionForm({ onAdded }: Props) {
+function toLocalInput(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+export function AddTransactionForm({ onAdded, prefill, onPrefillConsumed }: Props) {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +38,44 @@ export function AddTransactionForm({ onAdded }: Props) {
     notes: "",
   };
   const [form, setForm] = useState(initial);
+  // Track the id of the last prefill we applied so the effect is idempotent
+  // (avoids re-populating mid-edit if the parent re-renders).
+  const appliedPrefillId = useRef<string | null>(null);
+
+  // When a transaction is handed in to duplicate, populate the form and open it.
+  useEffect(() => {
+    if (!prefill) {
+      appliedPrefillId.current = null;
+      return;
+    }
+    if (appliedPrefillId.current === prefill.id) return;
+    appliedPrefillId.current = prefill.id;
+    setForm({
+      symbol: prefill.symbol,
+      name: prefill.name || "",
+      assetType: prefill.assetType,
+      action: prefill.action,
+      quantity: String(prefill.quantity),
+      price: String(prefill.price),
+      fees: prefill.fees ? String(prefill.fees) : "",
+      currency: prefill.currency,
+      account: prefill.account || "",
+      firm: prefill.firm || "",
+      accountNumber: prefill.accountNumber || "",
+      orderType: prefill.orderType || "MARKET",
+      executedAt: toLocalInput(prefill.executedAt),
+      notes: prefill.notes || "",
+    });
+    setError(null);
+    setOpen(true);
+  }, [prefill]);
+
+  function closeAndReset() {
+    setForm(initial);
+    setOpen(false);
+    appliedPrefillId.current = null;
+    onPrefillConsumed?.();
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,8 +106,7 @@ export function AddTransactionForm({ onAdded }: Props) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || `Failed (${res.status})`);
       }
-      setForm(initial);
-      setOpen(false);
+      closeAndReset();
       onAdded();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -81,7 +127,7 @@ export function AddTransactionForm({ onAdded }: Props) {
     <form onSubmit={submit} className="card space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Add Transaction</h3>
-        <button type="button" className="text-muted hover:text-fg text-sm" onClick={() => setOpen(false)}>
+        <button type="button" className="text-muted hover:text-fg text-sm" onClick={closeAndReset}>
           Close
         </button>
       </div>
@@ -259,7 +305,7 @@ export function AddTransactionForm({ onAdded }: Props) {
       {error && <div className="text-sm text-bad">{error}</div>}
 
       <div className="flex justify-end gap-2">
-        <button type="button" className="btn-ghost" onClick={() => setOpen(false)}>
+        <button type="button" className="btn-ghost" onClick={closeAndReset}>
           Cancel
         </button>
         <button type="submit" className="btn" disabled={submitting}>

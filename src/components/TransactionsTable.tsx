@@ -5,6 +5,7 @@ import type { Transaction } from "@/lib/transaction-types";
 interface Props {
   transactions: Transaction[];
   onEdit: (t: Transaction) => void;
+  onDuplicate: (t: Transaction) => void;
   onDelete: (id: string) => void;
 }
 
@@ -27,7 +28,7 @@ function fmtDateTime(iso: string): string {
   });
 }
 
-export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
+export function TransactionsTable({ transactions, onEdit, onDuplicate, onDelete }: Props) {
   if (transactions.length === 0) {
     return (
       <div className="card text-center py-10">
@@ -54,7 +55,7 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
               <th className="text-left px-4 py-3">Firm</th>
               <th className="text-left px-4 py-3">Account #</th>
               <th className="text-left px-4 py-3">Account</th>
-              <th className="text-right px-4 py-3"></th>
+              <th className="text-right px-4 py-3 sticky right-0 bg-panel2/95 backdrop-blur-sm shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.4)]"></th>
             </tr>
           </thead>
           <tbody>
@@ -62,7 +63,7 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
               const total = t.quantity * t.price + (t.action === "BUY" ? t.fees : -t.fees);
               const actionTone = t.action === "BUY" ? "bg-good/20 text-good" : "bg-bad/20 text-bad";
               return (
-                <tr key={t.id} className="border-t border-border/60 hover:bg-panel2/40 transition">
+                <tr key={t.id} className="group border-t border-border/60 hover:bg-panel2/40 transition">
                   <td className="px-5 py-3 whitespace-nowrap text-muted text-xs">
                     {fmtDateTime(t.executedAt)}
                   </td>
@@ -96,13 +97,21 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Props) {
                   <td className="px-4 py-3 text-xs text-muted truncate max-w-[12rem]">
                     {t.account || "—"}
                   </td>
-                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                  <td className="px-4 py-3 text-right whitespace-nowrap sticky right-0 bg-panel/95 group-hover:bg-panel2/95 backdrop-blur-sm shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.4)]">
                     <button
                       onClick={() => onEdit(t)}
                       className="text-muted hover:text-accent2 transition text-xs mr-3"
                       aria-label={`Edit transaction ${t.symbol}`}
                     >
                       Edit
+                    </button>
+                    <button
+                      onClick={() => onDuplicate(t)}
+                      className="text-muted hover:text-accent transition text-xs mr-3"
+                      aria-label={`Duplicate transaction ${t.symbol}`}
+                      title="Pre-fill a new transaction with these values"
+                    >
+                      Duplicate
                     </button>
                     <button
                       onClick={() => {
