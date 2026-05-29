@@ -15,7 +15,7 @@ const RANGES: Array<{ label: string; days: number }> = [
   { label: "5Y", days: 1825 },
 ];
 
-export function PerformanceChart({ currency, firms, symbol, accountNumber, refreshKey }: { currency: string; firms?: string[]; symbol?: string; accountNumber?: string; refreshKey: number }) {
+export function PerformanceChart({ currency, firms, symbol, accountNumber, assetType, vehicle, refreshKey }: { currency: string; firms?: string[]; symbol?: string; accountNumber?: string; assetType?: string; vehicle?: string; refreshKey: number }) {
   const [days, setDays] = useState(180);
   const [data, setData] = useState<HistoryResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -29,6 +29,8 @@ export function PerformanceChart({ currency, firms, symbol, accountNumber, refre
     if (firms) for (const f of firms) params.append("firm", f);
     if (symbol) params.set("symbol", symbol);
     if (accountNumber) params.set("accountNumber", accountNumber);
+    if (assetType) params.set("assetType", assetType);
+    if (vehicle) params.set("vehicle", vehicle);
     fetch(`/api/history?${params.toString()}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((d: HistoryResponse) => {
@@ -43,7 +45,7 @@ export function PerformanceChart({ currency, firms, symbol, accountNumber, refre
     return () => {
       cancelled = true;
     };
-  }, [currency, days, firms, symbol, accountNumber, refreshKey]);
+  }, [currency, days, firms, symbol, accountNumber, assetType, vehicle, refreshKey]);
 
   const series = data?.series ?? [];
 

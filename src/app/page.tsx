@@ -146,6 +146,38 @@ function HomeInner() {
   const toggleFirm = (f: string) =>
     setSelectedFirms((prev) => (prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]));
 
+  // Translate an allocation-slice selection into history-API filters so the
+  // Portfolio Performance chart reflects the same view as the pie chart.
+  // A row-level position selection (`selectedPosition`) still wins, since it
+  // narrows things further than any slice.
+  const perfFirms = selectedPosition
+    ? selectedFirms
+    : selectedSlice?.groupBy === "firm"
+      ? [selectedSlice.key]
+      : selectedFirms;
+  let perfAccountNumber: string | undefined = selectedPosition?.accountNumber ?? undefined;
+  let perfAssetType: string | undefined;
+  let perfVehicle: string | undefined;
+  let perfFirmFromSlice: string | undefined;
+  if (!selectedPosition && selectedSlice) {
+    if (selectedSlice.groupBy === "type") perfAssetType = selectedSlice.key;
+    else if (selectedSlice.groupBy === "vehicle") perfVehicle = selectedSlice.key;
+    else if (selectedSlice.groupBy === "account") {
+      // Keys are either "Firm · 12345" or just "12345" (or "Unassigned").
+      if (selectedSlice.key !== "Unassigned") {
+        const parts = selectedSlice.key.split(" · ");
+        if (parts.length === 2) {
+          perfFirmFromSlice = parts[0];
+          perfAccountNumber = parts[1];
+        } else {
+          perfAccountNumber = selectedSlice.key;
+        }
+      }
+    }
+  }
+  const perfFirmsFinal = perfFirmFromSlice ? [perfFirmFromSlice] : perfFirms;
+  const perfSymbol = selectedPosition?.symbol ?? (selectedSlice?.groupBy === "symbol" ? selectedSlice.key : undefined);
+
   return (
     <main
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6"
@@ -232,9 +264,11 @@ function HomeInner() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PerformanceChart
           currency={currency}
-          firms={selectedFirms}
-          symbol={selectedPosition?.symbol}
-          accountNumber={selectedPosition?.accountNumber ?? undefined}
+          firms={perfFirmsFinal}
+          symbol={perfSymbol}
+          accountNumber={perfAccountNumber}
+          assetType={perfAssetType}
+          vehicle={perfVehicle}
           refreshKey={refreshKey}
         />
         <AllocationChart
